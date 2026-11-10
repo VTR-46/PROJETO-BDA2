@@ -1,0 +1,5 @@
+.env
+.owner.env
+__pycache__/
+.pytest_cache/
+malha_tmp/

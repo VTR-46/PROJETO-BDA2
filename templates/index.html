@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Analfabetismo de idosos no Brasil</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script defer src="{{ url_for('static', filename='vendor/leaflet.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='app.js') }}"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">◆</span> Observatório 60+</div>
+    <span class="topbar-note">Educação, renda e território</span>
+  </header>
+  <main>
+    <section class="intro">
+      <div>
+        <p class="eyebrow">PANORAMA MUNICIPAL DO BRASIL</p>
+        <h1>O analfabetismo na velhice tem endereço.</h1>
+        <p class="lede">Explore a taxa de pessoas não alfabetizadas com 60 anos ou mais e observe como renda e escolaridade se distribuem pelo território.</p>
+      </div>
+      <div class="intro-stat"><strong id="coverage">—</strong><span>municípios com taxa disponível</span></div>
+    </section>
+
+    <section class="workspace" aria-labelledby="map-heading">
+      <div class="section-head">
+        <div><p class="eyebrow">01 / EXPLORAR O TERRITÓRIO</p><h2 id="map-heading">Mapa de analfabetismo</h2></div>
+        <p>Selecione uma UF ou busque um município de qualquer estado.</p>
+      </div>
+      <div class="controls">
+        <label for="uf-select">Unidade federativa</label>
+        <select id="uf-select"><option value="">Brasil — escolha uma UF</option></select>
+        <label for="city-search">Buscar município</label>
+        <input id="city-search" list="city-options" placeholder="Digite o nome ou escolha uma sugestão" disabled autocomplete="off">
+        <datalist id="city-options"></datalist>
+        <button id="reset-map" type="button">Ver Brasil</button>
+      </div>
+      <p id="status" class="status" role="status" aria-live="polite">Carregando dados…</p>
+      <div class="map-grid">
+        <div class="map-card">
+          <div id="map" role="img" aria-label="Mapa do Brasil com municípios coloridos pela taxa de analfabetismo"></div>
+          <div class="legend"><span>Taxa de analfabetismo</span><div class="legend-items"><i class="c1"></i> até 10% <i class="c2"></i> 10–20% <i class="c3"></i> 20–30% <i class="c4"></i> acima de 30% <i class="c0"></i> sem dados</div></div>
+        </div>
+        <aside class="details" id="details" aria-live="polite">
+          <p class="eyebrow">MUNICÍPIO SELECIONADO</p>
+          <h3>Escolha um município no mapa</h3>
+          <p>Os indicadores disponíveis aparecerão aqui.</p>
+        </aside>
+      </div>
+      <p class="source-note">Alfabetização: IBGE, Censo 2022, tabela 9542. Malha territorial: IBGE, 2025. O ano dos indicadores de renda e escolaridade não está documentado nos arquivos do projeto. Áreas cinzas não têm taxa calculável.</p>
+    </section>
+
+    <section class="analysis-grid">
+      <div class="panel">
+        <p class="eyebrow">02 / COMPARAÇÃO MUNICIPAL</p>
+        <h2>Renda e analfabetismo</h2>
+        <p>Cada ponto representa um município da UF selecionada com os dois indicadores disponíveis. A comparação é descritiva.</p>
+        <div id="scatter" class="chart" role="img" aria-label="Dispersão de renda e taxa de analfabetismo por município"></div>
+        <p id="scatter-count" class="chart-caption"></p>
+      </div>
+      <div class="panel">
+        <p class="eyebrow">03 / AMOSTRA NACIONAL</p>
+        <h2>Renda por escolaridade</h2>
+        <p>Média da renda mensal informada nos registros da PNAD de pessoas com 60 anos ou mais, por nível de instrução.</p>
+        <div id="pnad-chart" class="bar-chart" aria-label="Gráfico de renda média por escolaridade"></div>
+        <p id="pnad-note" class="chart-caption"></p>
+      </div>
+    </section>
+    <footer><strong>Como ler os dados</strong><p>Renda é um indicador indireto de qualidade de vida. Baixa escolaridade significa “sem instrução e fundamental incompleto”; não equivale a analfabetismo. A amostra da PNAD não inclui pesos nos arquivos disponíveis e não permite inferir a renda de cada município ou uma relação causal.</p></footer>
+  </main>
+</body>
+</html>
