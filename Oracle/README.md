@@ -30,6 +30,18 @@ Execute o roteiro de instalação apenas em um esquema vazio; no banco existente
 | `06_visoes.sql` | Cria views com os percentuais e nomes para consulta. |
 | `07_validacao.sql` | Verifica totais, lacunas e exemplos de análise. |
 | `08_permissoes_leitura.sql` | Concede `SELECT` à conta usada pela página. |
+| `09_consulta_analfabetismo.sql` | Mostra a taxa e as contagens de alfabetização de um município. |
+| `10_consulta_renda_nominal_media.sql` | Mostra a renda média mensal de um município. |
+| `11_consulta_baixa_escolaridade.sql` | Mostra a taxa e as contagens de baixa escolaridade de um município. |
+| `12_consulta_codigos_municipios.sql` | Encontra o código IBGE pelo nome do município e mostra o estado. |
+
+## Consultar os mesmos indicadores da página
+
+Os arquivos `09`, `10` e `11` são **apenas consultas**: não alteram o banco e não fazem parte dos roteiros de instalação. Abra cada um no SQL Developer e execute com **F5**, conectado como `MAPA_IDOSOS` ou `MAPA_IDOSOS_RO`. Todos usam São Paulo (código IBGE `3550308`) como exemplo. Para ver outra cidade, substitua esse número no `WHERE id_municipio = 3550308`.
+
+Para descobrir o código, abra `12_consulta_codigos_municipios.sql`, troque `Campinas` pelo nome procurado e execute com **F5**. A coluna `ESTADO` distingue municípios que tenham o mesmo nome. Copie o valor de `CODIGO_IBGE` para um dos scripts de indicadores.
+
+As consultas leem `MAPA_IDOSOS.vw_mapa_idosos`, que reúne os indicadores municipais exibidos no painel da página. Um resultado `NULL` corresponde a **“Sem dados”** na página. Os percentuais já vêm calculados com duas casas decimais; a renda está em reais por mês.
 
 A alfabetização vem da [Tabela 9542 do Censo 2022 do IBGE](https://servicodados.ibge.gov.br/api/v3/agregados/9542/metadados). A renda e a escolaridade vêm de `CSV/censo_idosos_consolidado.csv`; a PNAD vem dos `INSERTs` já existentes. A taxa municipal é `100 × não alfabetizados / total` para 60 anos ou mais. Valores `NULL` significam que alguma célula necessária não estava disponível; não são zeros. Dos 5.570 municípios do Censo, 236 não têm taxa calculável. Boa Esperança do Norte (MT) consta na malha 2025, mas não no Censo 2022.
 
