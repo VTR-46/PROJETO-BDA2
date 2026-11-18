@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-DSN = "localhost:1521/XEPDB1"
+DSN = "localhost:1539/FREEPDB1"
 
 
 def password():
