@@ -25,13 +25,38 @@ O Oracle guarda indicadores resumidos. O Flask consulta o banco usando uma conta
 | `schema_indicadores.sql` | Tabelas adicionais para a instalação via Python. |
 | `.env` e `.owner.env` | Conexões locais de leitura e carga. São ignoradas pelo Git. |
 
+## Executar em outra máquina
+
+1. Instale **Python 3.10 ou superior**, com `pip` e `venv` (no Windows, habilite Python no `PATH`; no Linux, pode ser necessário instalar o pacote `python3-venv`).
+2. Clone o repositório ou copie a pasta do projeto, **sem `.venv`, `.env` e `.owner.env`**. O ambiente Python precisa ser criado em cada máquina; as senhas são configuradas separadamente.
+3. Tenha acesso a um Oracle já preparado, local ou remoto. Para um banco novo, siga o [roteiro do SQL Developer](Oracle/README.md): os scripts SQL já incluem os dados consolidados. Esse preparo é feito uma vez por banco, não por computador.
+4. Copie `.env.example` para `.env` e preencha a senha de leitura. Em `ORACLE_DSN`, use `HOST:PORTA/SERVICO`, por exemplo `192.168.1.10:1521/XEPDB1` para um banco remoto. O servidor Oracle precisa permitir a conexão dessa máquina.
+5. Na pasta principal, execute:
+
+   ```sh
+   python iniciar.py
+   ```
+
+   No Linux/macOS, use `python3 iniciar.py` se o comando disponível for `python3`.
+
+Abra <http://127.0.0.1:5000>. O iniciador cria `.venv`, instala as dependências e inicia o Flask, sem precisar ativar o ambiente manualmente. Nas próximas execuções, reutiliza o ambiente e só reinstala dependências se `requirements.txt` mudar. A primeira instalação exige internet. Para encerrar, pressione `Ctrl+C`.
+
+**Para apenas executar o mapa**, não é preciso instalar Node.js, SQL Developer, SQL*Plus ou Oracle Client nessa máquina: o driver Python conecta diretamente ao Oracle. Node.js só é necessário para reconstruir as malhas; SQL Developer ou SQL*Plus são usados no preparo do banco. Os mapas e dados SQL já acompanham o repositório. A chave Gemini é opcional; o mapa funciona sem ela.
+
+Se optar pelo preparo local com `Python/setup_db.py`, execute-o **antes de criar `.env`**: ele gera as duas configurações e recusa sobrescrever arquivos existentes. Para cargas Python em um banco preparado por SQL Developer, use `.owner.env.example` como modelo de `.owner.env` e informe a senha do dono do esquema.
+
+O iniciador mantém o servidor acessível somente no próprio computador. Ele não instala nem copia o Oracle e não altera os dados do banco. Se `.venv` estiver danificado ou tiver sido copiado de outra máquina, remova apenas essa pasta e execute novamente. Para testar o iniciador sem instalar pacotes nem acessar o banco:
+
+```sh
+python -m unittest discover -s Python -p test_iniciar.py -v
+```
+
 ## Abrir a página neste computador
 
 O Oracle XE local já está preparado em `XEPDB1`, e os dados e malhas já foram carregados. Abra o PowerShell **na pasta principal do projeto**:
 
 ```powershell
-python -m pip install -r requirements.txt
-python Python/app.py
+python iniciar.py
 ```
 
 Abra <http://127.0.0.1:5000>. Para encerrar o servidor, pressione `Ctrl+C` no terminal. A conexão de leitura está em `.env`.

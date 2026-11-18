@@ -17,12 +17,19 @@ load_dotenv(ROOT / ".env")
 app = Flask(__name__, template_folder=str(ROOT / "templates"), static_folder=str(ROOT / "static"))
 app.config["MAX_CONTENT_LENGTH"] = 512 * 1024
 UF_BY_SIGLA = {sigla: code for code, (sigla, _) in UF.items()}
-pool = oracledb.create_pool(
-    user=os.environ["ORACLE_USER"],
-    password=os.environ["ORACLE_PASSWORD"],
-    dsn=os.environ["ORACLE_DSN"],
-    min=1, max=4, increment=1,
-)
+if not all(os.getenv(name) for name in ("ORACLE_USER", "ORACLE_PASSWORD", "ORACLE_DSN")):
+    raise SystemExit("Configure ORACLE_USER, ORACLE_PASSWORD e ORACLE_DSN no ambiente ou em .env. "
+                     "Use .env.example como modelo; veja o roteiro de instalação no README.md.")
+try:
+    pool = oracledb.create_pool(
+        user=os.environ["ORACLE_USER"],
+        password=os.environ["ORACLE_PASSWORD"],
+        dsn=os.environ["ORACLE_DSN"],
+        min=1, max=4, increment=1,
+    )
+except oracledb.Error:
+    raise SystemExit("Não foi possível conectar ao Oracle. Confira o serviço, a rede e "
+                     "ORACLE_USER, ORACLE_PASSWORD e ORACLE_DSN em .env.") from None
 
 
 def query(sql, params=None):

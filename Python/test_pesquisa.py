@@ -259,6 +259,27 @@ class PesquisaTest(unittest.TestCase):
         self.assertEqual(city["percentual_baixa_escolaridade"], 60)
         self.assertEqual(city["renda_media"], 1500.25)
 
+    def test_startup_explains_missing_configuration(self):
+        spec = importlib.util.spec_from_file_location("app_sem_config", Path(__file__).with_name("app.py"))
+        module = importlib.util.module_from_spec(spec)
+        with patch.dict(os.environ, {}, clear=True), patch("dotenv.load_dotenv"), \
+                patch("oracledb.create_pool") as pool:
+            with self.assertRaisesRegex(SystemExit, "env.example"):
+                spec.loader.exec_module(module)
+        pool.assert_not_called()
+
+    def test_startup_explains_connection_failure_without_leaking_details(self):
+        import oracledb
+
+        spec = importlib.util.spec_from_file_location("app_sem_banco", Path(__file__).with_name("app.py"))
+        module = importlib.util.module_from_spec(spec)
+        with patch.dict(os.environ, {"ORACLE_USER": "teste", "ORACLE_PASSWORD": "segredo", "ORACLE_DSN": "teste"}), \
+                patch("oracledb.create_pool", side_effect=oracledb.Error("segredo")):
+            with self.assertRaises(SystemExit) as raised:
+                spec.loader.exec_module(module)
+        self.assertIn("Não foi possível conectar", str(raised.exception))
+        self.assertNotIn("segredo", str(raised.exception))
+
 
 if __name__ == "__main__":
     unittest.main()
