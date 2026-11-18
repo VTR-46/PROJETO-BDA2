@@ -1,0 +1,142 @@
+// Testes de comportamento do painel, com DOM e rede simulados, sem dependências.
+const assert = require('node:assert/strict');
+const { readFileSync } = require('node:fs');
+const { join } = require('node:path');
+const { test } = require('node:test');
+const vm = require('node:vm');
+
+class Element {
+  constructor(tag = 'div') {
+    this.tagName = tag; this.children = []; this.events = {}; this.attributes = {};
+    this.textContent = ''; this.value = ''; this.hidden = false;
+  }
+  append(...children) { this.children.push(...children); }
+  replaceChildren(...children) { this.children = children; }
+  setAttribute(name, value) { this.attributes[name] = value; }
+  addEventListener(event, fn) { this.events[event] = fn; }
+  scrollIntoView() {}
+  querySelector() { return this.button ||= new Element('button'); }
+  get childElementCount() { return this.children.length; }
+}
+
+function interfaceSimulada() {
+  const elements = new Map();
+  const document = {
+    getElementById(id) { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); },
+    createElement(tag) { return new Element(tag); }
+  };
+  const context = vm.createContext({ document, URL, L: {
+    map: () => ({ fitBounds() {}, removeLayer() {} }),
+    geoJSON: () => ({ addTo() { return this; }, getBounds: () => [] })
+  }, fetch: () => new Promise(() => {}) });
+  vm.runInContext(readFileSync(join(__dirname, '../static/app.js'), 'utf8'), context);
+  return { context, elements, run: code => vm.runInContext(code, context) };
+}
+
+const cityA = { id_municipio: 3550308, nome: 'São Paulo', uf: 'SP' };
+const cityB = { id_municipio: 5101837, nome: 'Boa Esperança do Norte', uf: 'MT' };
+function resposta(city, texto = 'Contexto histórico e hipóteses.') {
+  return { municipio: city, indicadores: { taxa_analfabetismo: null, renda_media: 1500, percentual_baixa_escolaridade: 60 },
+    resposta: texto, fontes: [], sugestoes_busca: [], gerado_em: '2026-11-17T12:00:00+00:00' };
+}
+const http = data => ({ ok: true, json: async () => data });
+const flush = () => new Promise(resolve => setImmediate(resolve));
+function selecionar(ui, city) { ui.context.city = city; ui.run('selectCity(city)'); }
+function clicarPesquisa(ui) { ui.elements.get('details').children.at(-1).events.click(); }
+function todos(element) { return [element, ...element.children.flatMap(todos)]; }
+
+test('bloqueia duplicação e exibe texto seguro, fontes e sugestões isoladas', async () => {
+  const ui = interfaceSimulada();
+  let resolve, calls = 0;
+  ui.context.fetch = () => { calls++; return new Promise(done => { resolve = done; }); };
+  selecionar(ui, cityA); clicarPesquisa(ui); clicarPesquisa(ui);
+  assert.equal(calls, 1);
+  assert.equal(ui.elements.get('research-form').querySelector().disabled, true);
+  const data = resposta(cityA, '<script>alert(1)</script> Educação: São Paulo');
+  data.fontes = [{ titulo: 'Fonte', url: 'https://www.ibge.gov.br/', trecho: 'Educação: São Paulo' },
+    { titulo: 'Inválida', url: 'javascript:alert(1)', trecho: 'Ignorar' }];
+  data.sugestoes_busca = ['<div>Pesquisa Google</div>'];
+  resolve(http(data)); await flush();
+  const nodes = todos(ui.elements.get('research-conversation'));
+  assert.equal(nodes.find(n => n.className === 'research-text').textContent, data.resposta);
+  assert.equal(nodes.filter(n => n.tagName === 'a').length, 1);
+  assert.equal(nodes.find(n => n.tagName === 'a').rel, 'noopener noreferrer');
+  const frame = nodes.find(n => n.tagName === 'iframe');
+  assert.equal(frame.attributes.sandbox, 'allow-popups allow-popups-to-escape-sandbox');
+  assert.equal(frame.srcdoc, '<base target="_blank">' + data.sugestoes_busca[0]);
+  assert.match(nodes.find(n => n.className === 'source-note').textContent, /Sem dados/);
+  assert.equal(ui.elements.get('research-form').hidden, false);
+});
+
+test('resposta atrasada fica no município correto e o retorno usa o relatório salvo', async () => {
+  const ui = interfaceSimulada(), pending = [];
+  ui.context.fetch = () => new Promise(resolve => pending.push(resolve));
+  selecionar(ui, cityA); clicarPesquisa(ui);
+  selecionar(ui, cityB);
+  assert.equal(ui.elements.get('research-panel').hidden, true);
+  pending[0](http(resposta(cityA, 'Relatório A'))); await flush();
+  assert.equal(ui.elements.get('research-panel').hidden, true);
+  clicarPesquisa(ui);
+  pending[1](http(resposta(cityB, 'Relatório B'))); await flush();
+  assert.match(ui.elements.get('research-heading').textContent, /Boa Esperança/);
+  selecionar(ui, cityA); clicarPesquisa(ui);
+  assert.equal(pending.length, 2);
+  assert.match(ui.elements.get('research-heading').textContent, /São Paulo/);
+  assert.equal(todos(ui.elements.get('research-conversation')).find(n => n.className === 'research-text').textContent, 'Relatório A');
+  ui.run('resetMap()');
+  assert.equal(ui.elements.get('research-panel').hidden, true);
+});
+
+test('perguntas enviam o relatório e apenas as últimas cinco trocas do município', async () => {
+  const ui = interfaceSimulada(), requests = [];
+  ui.context.fetch = async (url, options) => {
+    requests.push({ url, ...JSON.parse(options.body) });
+    return http(resposta(url.includes(String(cityB.id_municipio)) ? cityB : cityA,
+      requests.length === 1 ? 'Relatório original' : 'Resposta ' + requests.length));
+  };
+  selecionar(ui, cityA); clicarPesquisa(ui); await flush();
+  for (let i = 0; i < 7; i++) await ui.run(`runResearch(selectedCity, 'Pergunta ${i}')`);
+  const last = requests.at(-1);
+  assert.equal(last.url, '/api/municipios/3550308/pesquisa');
+  assert.equal(last.historico.length, 11);
+  assert.deepEqual(last.historico[0], { role: 'assistant', content: 'Relatório original' });
+  assert.deepEqual(last.historico[1], { role: 'user', content: 'Pergunta 1' });
+  assert.equal(last.pergunta, 'Pergunta 6');
+  selecionar(ui, cityB); clicarPesquisa(ui); await flush();
+  assert.equal(requests.at(-1).historico, undefined);
+});
+
+test('carregar outra UF limpa uma seleção feita no mapa antigo durante a espera', async () => {
+  const ui = interfaceSimulada(), pending = [];
+  ui.context.fetch = async () => http(resposta(cityA));
+  selecionar(ui, cityA); clicarPesquisa(ui); await flush();
+  ui.context.fetch = () => new Promise(resolve => pending.push(resolve));
+  const loading = ui.run("loadUf('MT')");
+  assert.equal(ui.elements.get('research-panel').hidden, true);
+  selecionar(ui, cityA);
+  assert.equal(ui.elements.get('research-panel').hidden, false);
+  pending[0](http({ features: [] })); pending[1](http([]));
+  await loading;
+  assert.equal(ui.elements.get('research-panel').hidden, true);
+  assert.equal(ui.run('selectedCity'), null);
+});
+
+test('falhas permitem tentar de novo e preservam a pergunta sem fontes inventadas', async () => {
+  const ui = interfaceSimulada();
+  ui.context.fetch = async () => ({ ok: false, json: async () => ({ erro: 'Configure GEMINI_API_KEY' }) });
+  selecionar(ui, cityA); clicarPesquisa(ui); await flush();
+  assert.equal(ui.elements.get('research-retry').hidden, false);
+  assert.match(ui.elements.get('research-status').textContent, /GEMINI_API_KEY/);
+  ui.context.fetch = async () => http(resposta(cityA));
+  ui.elements.get('research-retry').events.click(); await flush();
+  assert.equal(ui.elements.get('research-retry').hidden, true);
+  assert.match(todos(ui.elements.get('research-conversation')).find(n => n.className === 'research-warning').textContent, /não trouxe fontes/);
+  ui.context.fetch = async () => ({ ok: false, json: async () => ({ erro: 'Limite de uso atingido' }) });
+  const question = ui.elements.get('research-question');
+  question.value = 'E a renda?'; question.events.input();
+  ui.elements.get('research-form').events.submit({ preventDefault() {} }); await flush();
+  assert.equal(question.value, 'E a renda?');
+  assert.equal(question.disabled, false);
+  assert.match(ui.elements.get('research-status').textContent, /Limite de uso/);
+  assert.equal(ui.run('researchStates.get(selectedCity.id_municipio).entries.length'), 1);
+});

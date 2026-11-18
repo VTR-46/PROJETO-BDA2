@@ -4,11 +4,16 @@ const search = document.getElementById('city-search');
 const options = document.getElementById('city-options');
 const status = document.getElementById('status');
 const details = document.getElementById('details');
+const researchPanel = document.getElementById('research-panel');
+const researchForm = document.getElementById('research-form');
+const researchQuestion = document.getElementById('research-question');
+const researchStates = new Map();
 const money = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 2 });
 const integer = new Intl.NumberFormat('pt-BR');
 const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 let countryLayer, cityLayer, cities = [], catalog = [], cityLayers = new Map(), requestId = 0;
 let selectedSearchCode = null;
+let selectedCity = null;
 
 async function getJson(url) {
   const response = await fetch(url);
@@ -81,6 +86,7 @@ function metric(label, value, note) {
 }
 
 function selectCity(city) {
+  selectedCity = city;
   search.value = cityLabel(city);
   selectedSearchCode = city.id_municipio;
   details.replaceChildren();
@@ -94,9 +100,110 @@ function selectCity(city) {
     metric('Sem instrução ou fundamental incompleto', emptyValue(city.percentual_baixa_escolaridade, v => `${percent.format(v)}%`),
       city.total_escolaridade == null ? '' : `${integer.format(city.baixa_escolaridade)} de ${integer.format(city.total_escolaridade)} idosos`)
   );
-  details.append(eyebrow, title, grid);
+  const researchButton = document.createElement('button');
+  researchButton.type = 'button'; researchButton.className = 'research-button';
+  researchButton.textContent = 'Pesquisar município com Gemini';
+  researchButton.addEventListener('click', () => {
+    if (selectedCity?.id_municipio !== city.id_municipio) return;
+    if (!researchStates.has(city.id_municipio)) {
+      researchStates.set(city.id_municipio, { entries: [], busy: false, error: '', draft: '' });
+    }
+    renderResearch();
+    researchPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (!researchStates.get(city.id_municipio).entries.length) runResearch(city);
+  });
+  details.append(eyebrow, title, grid, researchButton);
+  renderResearch();
   const layer = cityLayers.get(city.id_municipio);
   if (layer) { layer.bringToFront(); map.fitBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 10 }); }
+}
+
+function renderResearch() {
+  const state = selectedCity && researchStates.get(selectedCity.id_municipio);
+  const button = details.querySelector('.research-button');
+  if (button) button.disabled = Boolean(state?.busy);
+  researchPanel.hidden = !state;
+  if (!state) return;
+  document.getElementById('research-heading').textContent = `Contexto de ${cityLabel(selectedCity)}`;
+  document.getElementById('research-status').textContent = state.busy
+    ? 'Pesquisando fontes e relacionando os indicadores… Isso pode levar até 60 segundos.'
+    : state.error || 'Análise da IA: consulte as fontes e diferencie fatos de hipóteses.';
+  const conversation = document.getElementById('research-conversation');
+  conversation.setAttribute('aria-busy', String(state.busy));
+  conversation.replaceChildren();
+  for (const entry of state.entries) {
+    const article = document.createElement('article'); article.className = 'research-entry';
+    const title = document.createElement('h3'); title.textContent = entry.pergunta || 'Relatório inicial';
+    const data = entry.data;
+    const snapshot = document.createElement('p'); snapshot.className = 'source-note';
+    const indicators = data.indicadores;
+    const date = new Date(data.gerado_em).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+    snapshot.textContent = `Dados usados do Oracle · ${date} (horário de Brasília): analfabetismo ${emptyValue(indicators.taxa_analfabetismo, v => `${percent.format(v)}%`)}; renda mensal ${emptyValue(indicators.renda_media, v => money.format(v))}; baixa escolaridade ${emptyValue(indicators.percentual_baixa_escolaridade, v => `${percent.format(v)}%`)}. Alfabetização: 2022; ano da renda e escolaridade não documentado.`;
+    const text = document.createElement('p'); text.className = 'research-text'; text.textContent = data.resposta;
+    article.append(title, snapshot, text);
+    const sourcesTitle = document.createElement('h4'); sourcesTitle.textContent = 'Fontes e trechos relacionados';
+    article.append(sourcesTitle);
+    const sources = document.createElement('ul'); sources.className = 'research-sources';
+    for (const source of data.fontes) {
+      let url;
+      try { url = new URL(source.url); } catch { continue; }
+      if (!['https:', 'http:'].includes(url.protocol)) continue;
+      const item = document.createElement('li');
+      const quote = document.createElement('blockquote'); quote.textContent = source.trecho;
+      const link = document.createElement('a'); link.textContent = source.titulo;
+      link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
+      item.append(quote, link); sources.append(item);
+    }
+    if (sources.childElementCount) article.append(sources);
+    else {
+      const warning = document.createElement('p'); warning.className = 'research-warning';
+      warning.textContent = 'Esta resposta não trouxe fontes verificáveis. Trate o texto como interpretação da IA, não como pesquisa confirmada.';
+      article.append(warning);
+    }
+    for (const html of data.sugestoes_busca) {
+      const frame = document.createElement('iframe');
+      frame.title = 'Sugestões de pesquisa do Google'; frame.className = 'research-suggestions';
+      frame.setAttribute('sandbox', 'allow-popups allow-popups-to-escape-sandbox');
+      frame.referrerPolicy = 'no-referrer'; frame.srcdoc = '<base target="_blank">' + html;
+      article.append(frame);
+    }
+    conversation.append(article);
+  }
+  document.getElementById('research-retry').hidden = state.busy || !state.error || state.entries.length > 0;
+  researchForm.hidden = !state.entries.length;
+  researchQuestion.value = state.draft;
+  researchQuestion.disabled = state.busy;
+  researchForm.querySelector('button').disabled = state.busy;
+}
+
+async function runResearch(city, pergunta = '') {
+  const state = researchStates.get(city.id_municipio);
+  if (!state || state.busy) return;
+  const historico = state.entries.length ? [
+    { role: 'assistant', content: state.entries[0].data.resposta.slice(0, 20000) },
+    ...state.entries.slice(1).slice(-5).flatMap(entry => [
+      { role: 'user', content: entry.pergunta },
+      { role: 'assistant', content: entry.data.resposta.slice(0, 20000) }
+    ])
+  ] : [];
+  state.busy = true; state.error = '';
+  renderResearch();
+  try {
+    const response = await fetch(`/api/municipios/${city.id_municipio}/pesquisa`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(pergunta ? { pergunta, historico } : {})
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.erro || 'Não foi possível concluir a pesquisa. Tente novamente.');
+    if (data.municipio.id_municipio !== city.id_municipio) throw new Error('A resposta não corresponde ao município selecionado.');
+    state.entries.push({ pergunta, data }); state.draft = '';
+  } catch (error) {
+    state.error = error instanceof TypeError || error instanceof SyntaxError
+      ? 'Não foi possível obter a resposta do servidor. Confira a conexão e tente novamente.' : error.message;
+  } finally {
+    state.busy = false;
+    if (selectedCity?.id_municipio === city.id_municipio) renderResearch();
+  }
 }
 
 function makeSvg(name, attributes, text) {
@@ -140,6 +247,8 @@ function drawScatter() {
 
 async function loadUf(sigla, selectedCode = null) {
   if (!sigla) return resetMap();
+  selectedCity = null; renderResearch();
+  details.replaceChildren();
   const current = ++requestId;
   status.textContent = `Carregando municípios de ${sigla}…`;
   try {
@@ -147,6 +256,7 @@ async function loadUf(sigla, selectedCode = null) {
       getJson(`/static/malhas/${sigla}.geojson`), getJson(`/api/municipios?uf=${sigla}`)
     ]);
     if (current !== requestId) return;
+    selectedCity = null; renderResearch();
     cities = rows;
     const byCode = new Map(rows.map(city => [city.id_municipio, city]));
     if (cityLayer) map.removeLayer(cityLayer);
@@ -180,6 +290,7 @@ async function loadUf(sigla, selectedCode = null) {
 
 function resetMap() {
   ++requestId;
+  selectedCity = null; renderResearch();
   if (cityLayer) map.removeLayer(cityLayer);
   cityLayer = null; cities = []; cityLayers.clear();
   if (countryLayer) { countryLayer.addTo(map); map.fitBounds(countryLayer.getBounds(), { padding: [15, 15] }); }
@@ -239,6 +350,17 @@ async function initialize() {
 }
 
 ufSelect.addEventListener('change', () => loadUf(ufSelect.value));
+researchQuestion.addEventListener('input', () => {
+  if (selectedCity) researchStates.get(selectedCity.id_municipio).draft = researchQuestion.value;
+});
+researchForm.addEventListener('submit', event => {
+  event.preventDefault();
+  const pergunta = researchQuestion.value.trim();
+  if (selectedCity && pergunta) runResearch(selectedCity, pergunta);
+});
+document.getElementById('research-retry').addEventListener('click', () => {
+  if (selectedCity) runResearch(selectedCity);
+});
 document.getElementById('reset-map').addEventListener('click', resetMap);
 search.addEventListener('input', () => { selectedSearchCode = null; updateSuggestions(); });
 search.addEventListener('change', commitSearch);

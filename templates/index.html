@@ -50,6 +50,21 @@
         </aside>
       </div>
       <p class="source-note">Alfabetização: IBGE, Censo 2022, tabela 9542. Malha territorial: IBGE, 2025. O ano dos indicadores de renda e escolaridade não está documentado nos arquivos do projeto. Áreas cinzas não têm taxa calculável.</p>
+      <section id="research-panel" class="research-panel" aria-labelledby="research-heading" hidden>
+        <p class="eyebrow">PESQUISA COM GEMINI</p>
+        <h2 id="research-heading">Contexto do município</h2>
+        <p>Pesquisa sobre educação, renda e história local relacionada aos indicadores dos idosos. Confira as fontes e as hipóteses apresentadas.</p>
+        <p class="source-note">As perguntas e os indicadores agregados são enviados ao Google. A conversa fica nesta aba e é perdida ao recarregar. Cada envio pode consumir cota da API.</p>
+        <p id="research-status" class="status" role="status" aria-live="polite"></p>
+        <div id="research-conversation" aria-busy="false"></div>
+        <button id="research-retry" type="button" hidden>Tentar novamente</button>
+        <form id="research-form" hidden>
+          <label for="research-question">Pergunte sobre este município</label>
+          <textarea id="research-question" rows="3" maxlength="1000" required placeholder="Como a história da educação local pode ajudar a interpretar esses números?"></textarea>
+          <p class="source-note">Até 1.000 caracteres. A IA recebe o relatório inicial e as últimas cinco trocas de perguntas e respostas.</p>
+          <button type="submit">Enviar pergunta</button>
+        </form>
+      </section>
     </section>
 
     <section class="analysis-grid">

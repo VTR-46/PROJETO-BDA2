@@ -9,7 +9,7 @@ SELECT
     u.nome AS estado
 FROM mapa_idosos.tab_municipio m
 JOIN mapa_idosos.tab_uf u ON u.id_uf = m.id_uf
-WHERE UPPER(m.nome) LIKE UPPER('%Campinas%')
+WHERE UPPER(m.nome) LIKE UPPER('%Campinas%')    --% para buscar parte do nome
 ORDER BY u.nome, m.nome;
 
 -- Copie CODIGO_IBGE para o WHERE id_municipio = ... dos scripts 09, 10 e 11.

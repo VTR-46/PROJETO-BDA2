@@ -38,6 +38,28 @@ Abra <http://127.0.0.1:5000>. Para encerrar o servidor, pressione `Ctrl+C` no te
 
 No mapa, a cor de cada UF mostra sua taxa estadual. Clique numa UF ou escolha-a na lista para carregar os municípios. A busca funciona desde o mapa do Brasil: digite um nome, escolha uma sugestão com a UF ou pressione Enter sobre um nome completo. A página abre a UF e o município encontrados. **Ver Brasil** retorna ao mapa estadual e mantém a busca disponível. Cinza significa **sem taxa calculável**, não taxa zero. O balão da UF informa sua taxa e a cobertura municipal.
 
+## Pesquisar um município com Gemini
+
+Acrescente à configuração `.env` na raiz (ou às variáveis de ambiente do servidor):
+
+```dotenv
+GEMINI_API_KEY=SUA_CHAVE_DO_GOOGLE_AI_STUDIO
+GEMINI_MODEL=gemini-3.5-flash-lite
+GEMINI_GOOGLE_SEARCH=0
+```
+
+Obtenha sua chave no [Google AI Studio](https://aistudio.google.com/apikey) e reinicie o Flask. `GEMINI_MODEL` e `GEMINI_GOOGLE_SEARCH` são opcionais. Por padrão (`GEMINI_GOOGLE_SEARCH=0`), o servidor coleta gratuitamente o contexto territorial e histórico em APIs públicas (IBGE Localidades, IBGE Cidades@, SIDRA Censo 2022 e Wikipédia em português) e envia ao Gemini sem exigir a ferramenta paga `google_search`, funcionando imediatamente no plano gratuito. Se o seu projeto tiver faturamento ativo para *Grounding with Google Search*, defina `GEMINI_GOOGLE_SEARCH=1` (se a cota de busca retornar `429`, o servidor faz fallback automático para o modo público). A chave fica no servidor: não a coloque no JavaScript, em capturas de tela nem no Git. Nenhuma dependência adicional é necessária.
+
+Selecione um município pelo mapa, pela busca ou pelo gráfico e clique em **Pesquisar município com Gemini**. O relatório aparece abaixo do mapa, com contexto histórico e atual, relações possíveis com analfabetismo, renda e escolaridade dos idosos, fontes e limitações. Depois, use **Enviar pergunta** para aprofundar a análise. Os links acompanham os trechos que sustentam; respostas sem citações recebem um aviso explícito.
+
+O servidor consulta os números diretamente no Oracle antes de cada envio. A IA recebe apenas identificação municipal, indicadores agregados e conversa; nunca recebe credenciais nem acesso para executar SQL. Os números utilizados e a data da pesquisa aparecem em cada resposta. Fatos recentes não explicam automaticamente o Censo 2022, o ano da renda e escolaridade permanece desconhecido, e hipóteses não comprovam causas.
+
+Relatórios e perguntas ficam separados por código IBGE, somente na memória da aba. Voltar a um município reaproveita sua conversa; recarregar ou fechar a aba apaga os resultados. Cada pergunta envia o relatório inicial e até cinco trocas anteriores, com até 1.000 caracteres por pergunta. A chamada usa `store=false`, sem histórico de interações persistido pela aplicação ou encadeamento no servidor do Gemini; o processamento do Google segue seus próprios termos.
+
+Cada clique de pesquisa ou envio de pergunta faz uma chamada, com busca habilitada e timeout de 60 segundos, sem repetição automática. Consultas podem consumir cota e gerar cobrança: veja a [documentação de busca e preços](https://aistudio.google.com/docs/google-search#pricing). Se faltar chave, rede, acesso ao modelo ou cota, o painel informa o problema e permite nova tentativa; o mapa continua funcionando.
+
+**Erro 429 ao pesquisar:** confira as [cotas do projeto no Google AI Studio](https://aistudio.google.com/rate-limit). O limite pode ser temporário, diário ou corresponder a um recurso indisponível no seu plano. A busca na web pela API do `gemini-3.5-flash-lite` não está disponível no plano gratuito, conforme a [tabela de preços do modelo](https://aistudio.google.com/docs/pricing#gemini-3.5-flash-lite), embora uma chamada de texto sem busca possa funcionar. Nesse caso, aguardar ou gerar outra chave do mesmo projeto não libera a busca: é necessário habilitar o acesso e o faturamento adequados no projeto, sujeito a cobrança. A aplicação preserva o `Retry-After` informado em segundos pelo Google e explica a espera na mensagem, sem repetir a chamada automaticamente.
+
 ## Preparar outro Oracle XE
 
 Há duas formas de instalar o banco. **Escolha uma**; não execute ambas no mesmo esquema.
@@ -104,13 +126,25 @@ python Python/load_data.py --check
 | `/api/catalogo-municipios` | Código IBGE, nome e UF dos municípios para a busca nacional. |
 | `/api/municipios?uf=SP` | Indicadores dos municípios da UF. |
 | `/api/pnad-escolaridade` | Renda média e tamanho da amostra por escolaridade. |
+| `POST /api/municipios/<codigo>/pesquisa` | Relatório ou resposta do Gemini com indicadores do Oracle e fontes. |
+
+A pesquisa aceita `{}` para gerar o relatório ou `{"pergunta":"...","historico":[{"role":"assistant","content":"relatório inicial"}]}` para perguntar. O histórico começa com o relatório (`assistant`), seguido de até cinco pares `user`/`assistant`. Responde com `municipio`, `indicadores`, `resposta`, `fontes` (`titulo`, `url`, `trecho`), `sugestoes_busca` (HTML do Google, isolado em iframe com sandbox) e `gerado_em` (UTC). Erros usam `{"erro":"..."}`: 400 entrada inválida, 404 município inexistente, 413 corpo acima de 512 KiB, 429 cota, 502 falha do provedor/rede, 503 configuração/Oracle e 504 timeout.
 
 O Flask usa a conta `MAPA_IDOSOS_RO`. Não compartilhe `.env` nem `.owner.env`, que contêm senhas.
 
 ## Verificação e limites
 
+Os testes da pesquisa funcionam sem Oracle ativo, sem chave Gemini e sem consumir cota:
+
 ```powershell
-python -m unittest discover -s Python -p test_project.py
+python -m unittest discover -s Python -p test_pesquisa.py -v
+node --test tests/test_app.cjs
+```
+
+Para a suíte completa, o Oracle e os arquivos locais de dados precisam estar disponíveis. Se faltarem os SQLs geográficos ou da PNAD em `INSERT/`, extraia os respectivos arquivos de `INSERT/Inserts.zip` nessa pasta.
+
+```powershell
+python -m unittest discover -s Python -p 'test_*.py'
 ```
 
 São esperados **27 UFs com taxa**, **5.571 municípios na malha**, **5.334 com taxa**, **5.330 com taxa e renda** e **76.492 registros da PNAD**. Dos 5.570 municípios do Censo 2022, 236 têm pelo menos um valor necessário ausente e aparecem em cinza. Boa Esperança do Norte (MT) aparece na malha de 2025, mas não no Censo 2022.

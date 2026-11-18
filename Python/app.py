@@ -6,13 +6,16 @@ from pathlib import Path
 import oracledb
 from dotenv import load_dotenv
 from flask import Flask, jsonify, render_template, request
+from werkzeug.exceptions import BadRequest, HTTPException, NotFound
 
+from gemini import pesquisar, validar_pedido
 from load_data import PNAD_LABELS, UF
 
 
 ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(ROOT / ".env")
 app = Flask(__name__, template_folder=str(ROOT / "templates"), static_folder=str(ROOT / "static"))
+app.config["MAX_CONTENT_LENGTH"] = 512 * 1024
 UF_BY_SIGLA = {sigla: code for code, (sigla, _) in UF.items()}
 pool = oracledb.create_pool(
     user=os.environ["ORACLE_USER"],
@@ -31,6 +34,20 @@ def query(sql, params=None):
 
 def number(value):
     return float(value) if value is not None else None
+
+
+def municipio_json(row, sigla):
+    code, name, total_a, nao_a, total_e, baixa_e, renda = row
+    return {"id_municipio": int(code), "nome": name, "uf": sigla,
+            "total_alfabetizacao": int(total_a) if total_a is not None else None,
+            "nao_alfabetizados": int(nao_a) if nao_a is not None else None,
+            "taxa_analfabetismo": number(round(100 * nao_a / total_a, 2))
+            if total_a and nao_a is not None else None,
+            "total_escolaridade": int(total_e) if total_e is not None else None,
+            "baixa_escolaridade": int(baixa_e) if baixa_e is not None else None,
+            "percentual_baixa_escolaridade": number(round(100 * baixa_e / total_e, 2))
+            if total_e and baixa_e is not None else None,
+            "renda_media": number(renda)}
 
 
 @app.get("/")
@@ -66,17 +83,32 @@ def municipios():
                 FROM mapa_idosos.tab_municipio m LEFT JOIN mapa_idosos.tab_indicador_municipio i
                 ON i.id_municipio=m.id_municipio
                 WHERE m.id_uf=:uf ORDER BY m.nome""", {"uf": UF_BY_SIGLA[sigla]})
-    return jsonify([{"id_municipio": int(code), "nome": name, "uf": sigla,
-                     "total_alfabetizacao": int(total_a) if total_a is not None else None,
-                     "nao_alfabetizados": int(nao_a) if nao_a is not None else None,
-                     "taxa_analfabetismo": number(round(100 * nao_a / total_a, 2))
-                     if total_a and nao_a is not None else None,
-                     "total_escolaridade": int(total_e) if total_e is not None else None,
-                     "baixa_escolaridade": int(baixa_e) if baixa_e is not None else None,
-                     "percentual_baixa_escolaridade": number(round(100 * baixa_e / total_e, 2))
-                     if total_e and baixa_e is not None else None,
-                     "renda_media": number(renda)}
-                    for code, name, total_a, nao_a, total_e, baixa_e, renda in rows])
+    return jsonify([municipio_json(row, sigla) for row in rows])
+
+
+@app.post("/api/municipios/<int:codigo>/pesquisa")
+def pesquisa_municipio(codigo):
+    try:
+        if not 1000000 <= codigo <= 9999999:
+            raise BadRequest("Informe um código IBGE de sete dígitos.")
+        pergunta, historico = validar_pedido(request.get_json(silent=True))
+        rows = query("""SELECT m.id_municipio,m.nome,i.total_alfabetizacao,i.nao_alfabetizados,
+                    i.total_escolaridade,i.baixa_escolaridade,i.renda_media,m.id_uf
+                    FROM mapa_idosos.tab_municipio m LEFT JOIN mapa_idosos.tab_indicador_municipio i
+                    ON i.id_municipio=m.id_municipio WHERE m.id_municipio=:codigo""", {"codigo": codigo})
+        if not rows:
+            raise NotFound("Município não encontrado.")
+        city = municipio_json(rows[0][:-1], UF[int(rows[0][-1])][0])
+        result = pesquisar(city, pergunta, historico)
+        result["municipio"] = {key: city[key] for key in ("id_municipio", "nome", "uf")}
+        result["indicadores"] = {key: value for key, value in city.items()
+                                 if key not in result["municipio"]}
+        return jsonify(result)
+    except HTTPException as error:
+        response = jsonify({"erro": error.description})
+        if error.code == 429 and error.retry_after is not None:
+            response.headers["Retry-After"] = str(error.retry_after)
+        return response, error.code
 
 
 @app.get("/api/pnad-escolaridade")
