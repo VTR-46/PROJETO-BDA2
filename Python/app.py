@@ -9,7 +9,7 @@ from flask import Flask, jsonify, render_template, request
 from werkzeug.exceptions import BadRequest, HTTPException, NotFound
 
 from gemini import pesquisar, validar_pedido
-from load_data import PNAD_LABELS, UF
+from load_data import UF
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -112,12 +112,14 @@ def pesquisa_municipio(codigo):
 
 @app.get("/api/pnad-escolaridade")
 def pnad():
-    rows = query("""SELECT nivel_instrucao,total_amostra,amostra_com_renda,renda_media
+    rows = query("""SELECT nivel_instrucao,escolaridade,total_amostra,amostra_com_renda,renda_media,
+                fonte,ano_fonte,fonte_url
                 FROM mapa_idosos.vw_pnad_escolaridade ORDER BY nivel_instrucao""")
-    return jsonify([{"nivel": int(level), "escolaridade": PNAD_LABELS[int(level)],
+    return jsonify([{"nivel": int(level), "escolaridade": label,
                      "total_amostra": int(total), "amostra_com_renda": int(with_income),
-                     "renda_media": number(income)}
-                    for level, total, with_income, income in rows])
+                     "renda_media": number(income), "fonte": source,
+                     "ano_fonte": int(year) if year is not None else None, "fonte_url": url}
+                    for level, label, total, with_income, income, source, year, url in rows])
 
 
 @app.get("/api/catalogo-municipios")

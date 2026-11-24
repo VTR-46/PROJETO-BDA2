@@ -25,6 +25,8 @@ Execute o roteiro de instalação apenas em um esquema vazio; no banco existente
 
 ## Conteúdo dos arquivos
 
+O esquema possui 11 tabelas (3 base e 8 adicionais). Para acrescentar os dois catálogos ao banco existente, execute `roteiros/00_incremento_plsql.sql` como `MAPA_IDOSOS`, com F5, e depois reinicie o Flask. A migração vem antes da recriação da view PNAD. Não a execute no meio de uma transação: DDL no Oracle confirma alterações implicitamente.
+
 | Arquivo | O que faz |
 | --- | --- |
 | `01_estrutura.sql` | Cria 6 tabelas, chaves e índices. Parte das 3 tabelas de `banco_base.sql`. |
@@ -34,6 +36,7 @@ Execute o roteiro de instalação apenas em um esquema vazio; no banco existente
 | `04_indicadores_municipais.sql` | Carrega os contadores de alfabetização, escolaridade e renda média. |
 | `04a_indicadores_ufs.sql` | Carrega os totais oficiais das 27 UFs por `MERGE`. |
 | `05_pnad_resumo.sql` | Carrega o resumo nacional da PNAD por nível de instrução. |
+| `13a_catalogos_pnad.sql` | Cria e preenche os catálogos de níveis de instrução e fonte; adiciona as FKs ao resumo PNAD, preservando as cargas existentes. |
 | `06_visoes.sql` | Cria views com os percentuais e nomes para consulta. |
 | `07_validacao.sql` | Verifica totais, lacunas e exemplos de análise. |
 | `08_permissoes_leitura.sql` | Concede `SELECT` à conta usada pela página. |
@@ -43,6 +46,8 @@ Execute o roteiro de instalação apenas em um esquema vazio; no banco existente
 | `12_consulta_codigos_municipios.sql` | Encontra o código IBGE pelo nome do município e mostra o estado. |
 
 ## Consultar os mesmos indicadores da página
+
+Após a atualização, `07_validacao.sql` deve mostrar sete níveis, uma fonte inicial e 76.492 registros representados no resumo. A view PNAD deve manter as mesmas médias e contagens. Para conferir repetibilidade em esquema isolado, execute novamente a migração e a carga PNAD: não devem surgir duplicatas nem mudar os totais. O ano e a URL da amostra permanecem não informados. A conta web consulta a view; os novos catálogos não recebem GRANT direto.
 
 Os arquivos `09`, `10` e `11` são **apenas consultas**: não alteram o banco e não fazem parte dos roteiros de instalação. Abra cada um no SQL Developer e execute com **F5**, conectado como `MAPA_IDOSOS` ou `MAPA_IDOSOS_RO`. Todos usam São Paulo (código IBGE `3550308`) como exemplo. Para ver outra cidade, substitua esse número no `WHERE id_municipio = 3550308`.
 

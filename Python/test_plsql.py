@@ -61,7 +61,7 @@ class PlsqlTest(unittest.TestCase):
         return out.getvalue()
 
     def test_objects_and_seed(self):
-        self.assertEqual(self.scalar('SELECT COUNT(*) FROM user_tables'),9)
+        self.assertEqual(self.scalar('SELECT COUNT(*) FROM user_tables'),11)
         self.assertEqual(self.scalar("SELECT COUNT(*) FROM user_objects WHERE object_type IN ('FUNCTION','PROCEDURE','TRIGGER') AND status='VALID'"),7)
         self.assertEqual(self.scalar('SELECT COUNT(*) FROM user_errors'),0)
         self.assertEqual(self.scalar('SELECT COUNT(*) FROM tab_programa'),2)
@@ -75,6 +75,14 @@ class PlsqlTest(unittest.TestCase):
         seed = (Path(__file__).resolve().parent.parent / 'Oracle' / '17_programas_reais.sql').read_text(encoding='utf-8')
         self.error(20011,lambda: self.cursor.execute(seed.rstrip().removesuffix('/').rstrip()))
         self.assertEqual(self.scalar('SELECT qtd_turmas FROM tab_municipio_programa WHERE id_municipio=1500800 AND id_programa=:p',{'p':program}),14)
+
+    def test_pnad_catalogs_and_foreign_keys(self):
+        self.assertEqual(self.scalar('SELECT COUNT(*) FROM tab_nivel_instrucao'),7)
+        self.assertEqual(self.scalar("SELECT COUNT(*) FROM tab_fonte_dado WHERE codigo='PNAD_PROJETO'"),1)
+        self.assertEqual(self.scalar('SELECT SUM(total_amostra) FROM vw_pnad_escolaridade'),76492)
+        self.error(2291,lambda: self.cursor.execute('UPDATE tab_pnad_resumo SET nivel_instrucao=99 WHERE nivel_instrucao=1'))
+        self.error(2291,lambda: self.cursor.execute('UPDATE tab_pnad_resumo SET id_fonte=999 WHERE nivel_instrucao=1'))
+        self.error(1407,lambda: self.cursor.execute('UPDATE tab_pnad_resumo SET id_fonte=NULL WHERE nivel_instrucao=1'))
 
     def test_functions(self):
         for part,total,expected in [(1,3,33.33),(0,10,0),(None,10,None),(0,0,None),(5,None,None)]:

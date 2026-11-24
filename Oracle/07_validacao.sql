@@ -52,6 +52,12 @@ SELECT SUM(total_amostra) AS registros_pnad,
        SUM(amostra_com_renda) AS registros_com_renda
 FROM tab_pnad_resumo;
 
+-- Catálogos: sete níveis e uma fonte inicial; cada resumo possui as duas FKs.
+SELECT nivel_instrucao,nome FROM tab_nivel_instrucao ORDER BY nivel_instrucao;
+SELECT codigo,descricao,arquivo_origem,ano_referencia,url FROM tab_fonte_dado;
+SELECT escolaridade,total_amostra,renda_media,fonte,ano_fonte,fonte_url
+FROM vw_pnad_escolaridade ORDER BY nivel_instrucao;
+
 -- Exemplo: municípios de São Paulo com taxa calculável.
 SELECT municipio, taxa_analfabetismo, renda_media,
        percentual_baixa_escolaridade

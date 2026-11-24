@@ -11,10 +11,14 @@ Este documento resume a finalidade das tabelas, funções, procedures e triggers
 | `TAB_MUNICIPIO` | Municípios identificados pelo código IBGE e sua UF. |
 | `TAB_INDICADOR_MUNICIPIO` | Totais de alfabetização e escolaridade, contagem de idosos não alfabetizados/baixa escolaridade e renda média por município. A coluna `VERSAO` controla atualizações concorrentes. |
 | `TAB_PNAD_RESUMO` | Resumo da amostra PNAD por nível de instrução, com total de registros e renda média dos registros com renda informada. |
+| `TAB_NIVEL_INSTRUCAO` | Descrições dos sete códigos de escolaridade usados na PNAD, relacionados por FK ao resumo e exibidos no gráfico. |
+| `TAB_FONTE_DADO` | Código, descrição e arquivo de origem da amostra. O resumo da PNAD referencia esta tabela; ano e URL permanecem NULL enquanto não documentados. |
 | `TAB_INDICADOR_UF` | Totais oficiais de alfabetização e pessoas não alfabetizadas por UF, independentes da soma de municípios disponíveis. |
 | `TAB_PROGRAMA` | Catálogo de programas: código, nome, órgão, público, abrangência (nacional ou estadual), UF quando aplicável e fonte consultada. |
 | `TAB_MUNICIPIO_PROGRAMA` | Oferta documentada de um programa em um município e ano: turmas, participantes, fonte, datas, justificativa e versão. Não representa matrícula individual. |
 | `TAB_AUDITORIA_INDICADOR` | Registro de INSERT, UPDATE e DELETE em indicadores municipais, com usuário, instante e valores anteriores/novos em JSON. Não possui FK para preservar o histórico se o município for removido. |
+
+Os catálogos são criados e preenchidos por `13a_catalogos_pnad.sql`, que também acrescenta as duas FKs em `TAB_PNAD_RESUMO`. `id_fonte` é obrigatório e tem padrão 1 para manter as cargas existentes compatíveis. A migração preserva registros e metadados já cadastrados. `vw_pnad_escolaridade` faz os JOINs utilizados pela API e pela legenda do gráfico.
 
 ## Functions
 

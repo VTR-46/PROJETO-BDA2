@@ -1,6 +1,6 @@
 # MER e modelo relacional
 
-Este documento descreve o esquema implementado nos scripts Oracle. As três tabelas geográficas são a base; as seis tabelas adicionais armazenam indicadores, programas, ofertas e auditoria.
+Este documento descreve as 11 tabelas do esquema: três geográficas base e oito adicionais para indicadores, catálogos, programas, ofertas e auditoria.
 
 ## Modelo Entidade-Relacionamento (MER)
 
@@ -13,6 +13,8 @@ erDiagram
     TAB_PROGRAMA ||--o{ TAB_MUNICIPIO_PROGRAMA : "tem ofertas"
     TAB_MUNICIPIO ||--o{ TAB_MUNICIPIO_PROGRAMA : "recebe ofertas documentadas"
     TAB_MUNICIPIO ||--o{ TAB_AUDITORIA_INDICADOR : "origina eventos de auditoria"
+    TAB_NIVEL_INSTRUCAO ||--o| TAB_PNAD_RESUMO : "classifica o resumo"
+    TAB_FONTE_DADO ||--o{ TAB_PNAD_RESUMO : "identifica a origem"
 
     TAB_REGIAO {
         NUMBER id_regiao PK
@@ -38,10 +40,23 @@ erDiagram
         NUMBER versao
     }
     TAB_PNAD_RESUMO {
-        NUMBER nivel_instrucao PK
+        NUMBER nivel_instrucao PK, FK
         NUMBER total_amostra
         NUMBER amostra_com_renda
         NUMBER renda_media
+        NUMBER id_fonte FK
+    }
+    TAB_NIVEL_INSTRUCAO {
+        NUMBER nivel_instrucao PK
+        VARCHAR2 nome
+    }
+    TAB_FONTE_DADO {
+        NUMBER id_fonte PK
+        VARCHAR2 codigo UK
+        VARCHAR2 descricao
+        VARCHAR2 arquivo_origem
+        NUMBER ano_referencia
+        VARCHAR2 url
     }
     TAB_INDICADOR_UF {
         NUMBER id_uf PK, FK
@@ -83,7 +98,7 @@ erDiagram
     }
 ```
 
-`TAB_PNAD_RESUMO` não possui relacionamento declarado com outra tabela: é um resumo nacional agregado por nível de instrução. `TAB_AUDITORIA_INDICADOR.id_municipio` também não possui chave estrangeira intencionalmente, para preservar os registros de auditoria mesmo se o município relacionado for removido.
+`TAB_PNAD_RESUMO` é um resumo nacional agregado por nível de instrução, ligado aos catálogos de níveis e fontes. `TAB_AUDITORIA_INDICADOR.id_municipio` não possui chave estrangeira intencionalmente, para preservar os registros de auditoria mesmo se o município relacionado for removido.
 
 ## Cardinalidades e regras
 
@@ -97,6 +112,8 @@ erDiagram
 | Município — Oferta municipal | 1:0..N | Um município pode registrar vários programas e anos. |
 | Programa — Município | N:M, resolvido por `TAB_MUNICIPIO_PROGRAMA` | A chave da associativa é `(id_municipio, id_programa, ano_referencia)`, portanto há uma ocorrência por município, programa e ano. |
 | Município — Auditoria | 1:0..N lógica | Eventos guardam o código do município, sem FK física para manter o histórico. |
+| Nível de instrução — Resumo PNAD | 1:0..1 | Cada nível tem no máximo um resumo; todo resumo exige um nível cadastrado. |
+| Fonte — Resumo PNAD | 1:0..N | Uma fonte pode ser usada por vários níveis; todo resumo exige uma fonte cadastrada. |
 
 Os símbolos Mermaid `||`, `|{`, `o|` e `o{` indicam respectivamente “um obrigatório”, “um ou mais”, “zero ou um” e “zero ou muitos”.
 
@@ -111,7 +128,9 @@ Os símbolos Mermaid `||`, `|{`, `o|` e `o{` indicam respectivamente “um obrig
 ### Tabelas adicionais
 
 - **TAB_INDICADOR_MUNICIPIO** (`id_municipio` PK e FK → `TAB_MUNICIPIO.id_municipio`, `total_alfabetizacao`, `nao_alfabetizados`, `total_escolaridade`, `baixa_escolaridade`, `renda_media`, `versao`)
-- **TAB_PNAD_RESUMO** (`nivel_instrucao` PK, `total_amostra`, `amostra_com_renda`, `renda_media`)
+- **TAB_PNAD_RESUMO** (`nivel_instrucao` PK/FK → `TAB_NIVEL_INSTRUCAO.nivel_instrucao`, `total_amostra`, `amostra_com_renda`, `renda_media`, `id_fonte` FK → `TAB_FONTE_DADO.id_fonte`)
+- **TAB_NIVEL_INSTRUCAO** (`nivel_instrucao` PK, `nome`)
+- **TAB_FONTE_DADO** (`id_fonte` PK, `codigo` UNIQUE, `descricao`, `arquivo_origem`, `ano_referencia`, `url`)
 - **TAB_INDICADOR_UF** (`id_uf` PK e FK → `TAB_UF.id_uf`, `total_alfabetizacao`, `nao_alfabetizados`)
 - **TAB_PROGRAMA** (`id_programa` PK, `codigo` UNIQUE, `nome`, `orgao`, `publico`, `abrangencia`, `id_uf` FK opcional → `TAB_UF.id_uf`, `fonte_url`, `consultado_em`)
 - **TAB_MUNICIPIO_PROGRAMA** (`id_municipio` PK e FK → `TAB_MUNICIPIO.id_municipio`, `id_programa` PK e FK → `TAB_PROGRAMA.id_programa`, `ano_referencia` PK, `qtd_turmas`, `participantes_total`, `participantes_60mais`, `fonte_url`, `publicado_em`, `consultado_em`, `justificativa`, `versao`)

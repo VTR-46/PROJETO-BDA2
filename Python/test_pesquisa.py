@@ -260,6 +260,20 @@ class PesquisaTest(unittest.TestCase):
         self.assertEqual(city["percentual_baixa_escolaridade"], 60)
         self.assertEqual(city["renda_media"], 1500.25)
 
+    def test_pnad_api_uses_database_labels_and_source_metadata(self):
+        self.query.return_value = [(1, "Descrição cadastrada no Oracle", 100, 30, Decimal("1200.25"),
+                                    "Amostra PNAD de idosos utilizada no projeto", None, None)]
+        response = self.client.get("/api/pnad-escolaridade")
+        self.assertEqual(response.status_code, 200)
+        row = response.get_json()[0]
+        self.assertEqual(row["escolaridade"], "Descrição cadastrada no Oracle")
+        self.assertEqual(row["total_amostra"], 100)
+        self.assertEqual(row["renda_media"], 1200.25)
+        self.assertEqual(row["fonte"], "Amostra PNAD de idosos utilizada no projeto")
+        self.assertIsNone(row["ano_fonte"])
+        self.assertIsNone(row["fonte_url"])
+        self.assertIn("vw_pnad_escolaridade", self.query.call_args.args[0])
+
     def test_programs_api_formats_offer_and_keeps_missing_values(self):
         from datetime import datetime
 

@@ -3,6 +3,7 @@ SET DEFINE OFF
 SET SERVEROUTPUT ON
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 @@../13_estrutura_programas.sql
+@@../13a_catalogos_pnad.sql
 @@../14_funcoes.sql
 @@../15_procedures.sql
 @@../16_triggers.sql

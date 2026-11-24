@@ -8,6 +8,7 @@ WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 @@../03_municipios.sql
 @@../04_indicadores_municipais.sql
 @@../04a_indicadores_ufs.sql
+@@../13a_catalogos_pnad.sql
 @@../05_pnad_resumo.sql
 @@../13_estrutura_programas.sql
 @@../14_funcoes.sql

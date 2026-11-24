@@ -1,5 +1,6 @@
 -- IMPORTANTE: execute depois de 13_estrutura_programas.sql e 14_funcoes.sql,
 -- como MAPA_IDOSOS. Este arquivo depende de FN_PERCENTUAL e das tabelas novas.
+-- A view PNAD também depende dos catálogos criados por 13a_catalogos_pnad.sql.
 -- Uma VIEW é uma consulta salva: ela calcula percentuais sem alterar dados.
 -- NULL indica que a taxa não pode ser calculada com as células disponíveis.
 
@@ -31,20 +32,17 @@ LEFT JOIN tab_indicador_uf i ON i.id_uf = u.id_uf;
 
 CREATE OR REPLACE VIEW vw_pnad_escolaridade AS
 SELECT
-    nivel_instrucao,
-    CASE nivel_instrucao
-        WHEN 1 THEN 'Sem instrução'
-        WHEN 2 THEN 'Fundamental incompleto'
-        WHEN 3 THEN 'Fundamental completo'
-        WHEN 4 THEN 'Médio incompleto'
-        WHEN 5 THEN 'Médio completo'
-        WHEN 6 THEN 'Superior incompleto'
-        WHEN 7 THEN 'Superior completo'
-    END AS escolaridade,
-    total_amostra,
-    amostra_com_renda,
-    renda_media
-FROM tab_pnad_resumo;
+    p.nivel_instrucao,
+    n.nome AS escolaridade,
+    p.total_amostra,
+    p.amostra_com_renda,
+    p.renda_media,
+    f.descricao AS fonte,
+    f.ano_referencia AS ano_fonte,
+    f.url AS fonte_url
+FROM tab_pnad_resumo p
+JOIN tab_nivel_instrucao n ON n.nivel_instrucao=p.nivel_instrucao
+JOIN tab_fonte_dado f ON f.id_fonte=p.id_fonte;
 
 -- Interfaces de leitura da API; nenhuma escrita é concedida ao usuário web.
 CREATE OR REPLACE VIEW vw_catalogo_municipios AS

@@ -44,6 +44,7 @@ EXIT
     sqlplus(f"""WHENEVER SQLERROR EXIT SQL.SQLCODE
 @banco_base.sql
 @schema_indicadores.sql
+@Oracle/13a_catalogos_pnad.sql
 @Oracle/13_estrutura_programas.sql
 @Oracle/14_funcoes.sql
 @Oracle/15_procedures.sql
