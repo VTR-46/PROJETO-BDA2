@@ -2,6 +2,8 @@
 
 Este documento descreve as 11 tabelas do esquema: três geográficas base e oito adicionais para indicadores, catálogos, programas, ofertas e auditoria.
 
+**Versão editável:** [abrir/baixar o diagrama .drawio](diagramas/MODELAGEM_MER.drawio). Abra esse arquivo no diagrams.net para editar caixas e conexões ou exportar como imagem/PDF. Ele contém duas páginas: o MER com as nove FKs físicas e o fluxo lógico da auditoria. Se alterar o esquema, atualize o Markdown e o arquivo `.drawio` juntos.
+
 Conferido em **24/11/2026** com as tabelas, colunas e constraints instaladas no Oracle, por consultas de leitura a `USER_TABLES`, `USER_TAB_COLUMNS`, `USER_CONSTRAINTS` e `USER_CONS_COLUMNS`. Os scripts de referência são `01_estrutura.sql`, `13_estrutura_programas.sql` e `13a_catalogos_pnad.sql`.
 
 ## Modelo Entidade-Relacionamento (MER)
