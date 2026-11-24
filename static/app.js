@@ -15,6 +15,7 @@ let countryLayer, cityLayer, cities = [], catalog = [], cityLayers = new Map(), 
 let selectedSearchCode = null;
 let selectedCity = null;
 let selectedLayer = null;
+let hoveredLayer = null;
 const HOVER_BORDER = { color: '#73d5ff', weight: 2.5 };
 const SELECTED_BORDER = { color: '#001cb8', weight: 3 };
 let programRows = [], programSort = { key: 'ano_referencia', direction: 'desc' };
@@ -40,12 +41,30 @@ function applyStyle(layer, hovered = false) {
   layer.setStyle(style);
 }
 
+function clearHover() {
+  const previous = hoveredLayer;
+  hoveredLayer = null;
+  if (previous) {
+    previous.closeTooltip();
+    applyStyle(previous);
+  }
+}
+
 function addHover(layer) {
-  layer.on('mouseover', () => { applyStyle(layer, true); if (layer !== selectedLayer) layer.bringToFront(); selectedLayer?.bringToFront(); });
-  layer.on('mouseout', () => applyStyle(layer));
+  layer.on('mouseover', () => {
+    if (hoveredLayer !== layer) clearHover();
+    hoveredLayer = layer;
+    // Reordenar paths SVG durante o hover pode interromper os eventos de saída.
+    applyStyle(layer, true);
+  });
+  layer.on('mouseout', () => {
+    if (hoveredLayer === layer) clearHover();
+    else layer.closeTooltip();
+  });
 }
 
 function highlightCity(layer) {
+  clearHover();
   const previous = selectedLayer;
   selectedLayer = layer || null;
   if (previous && previous !== selectedLayer) applyStyle(previous);
@@ -272,6 +291,7 @@ function drawScatter() {
 
 async function loadUf(sigla, selectedCode = null) {
   if (!sigla) return resetMap();
+  clearHover();
   selectedCity = null; renderResearch();
   details.replaceChildren();
   const current = ++requestId;
@@ -319,6 +339,7 @@ async function loadUf(sigla, selectedCode = null) {
 
 function resetMap() {
   ++requestId;
+  clearHover();
   selectedCity = null; renderResearch();
   if (cityLayer) map.removeLayer(cityLayer);
   cityLayer = null; selectedLayer = null; cities = []; cityLayers.clear();
@@ -483,7 +504,11 @@ for (const id of ['program-filter', 'program-state-filter', 'program-year-filter
   document.getElementById(id).addEventListener('change', renderPrograms);
 }
 document.getElementById('program-city-search').addEventListener('input', renderPrograms);
+document.getElementById('map').addEventListener('mouseleave', clearHover);
+map.on('movestart', clearHover);
+map.on('zoomstart', clearHover);
 document.getElementById('map-section').addEventListener('toggle', event => {
+  clearHover();
   if (event.target.open) map.invalidateSize();
 });
 for (const key of ['programa', 'municipio', 'ano_referencia', 'ano_alfabetizacao', 'qtd_turmas', 'participantes_total', 'participantes_60mais', 'publicado_em']) {

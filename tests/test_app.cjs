@@ -26,7 +26,7 @@ function interfaceSimulada() {
     createElement(tag) { return new Element(tag); }
   };
   const context = vm.createContext({ document, URL, L: {
-    map: () => ({ fitBounds() {}, removeLayer() {} }),
+    map: () => ({ events: {}, on(event, fn) { this.events[event] = fn; }, fitBounds() {}, removeLayer() {} }),
     geoJSON: (geo, opts = {}) => {
       const layers = (geo?.features || []).map(feature => {
         const layer = {
@@ -34,6 +34,7 @@ function interfaceSimulada() {
           setStyle(s) { this.style = s; },
           on(ev, fn) { this.events[ev] = fn; },
           bindTooltip() {},
+          closeTooltip() { this.tooltipOpen = false; },
           bringToFront() { this.frontCount++; },
           getBounds: () => []
         };
@@ -209,6 +210,26 @@ test('aplica borda azul escuro (#001cb8) ao selecionar município e hover azul c
   assert.equal(layerA.style.color, '#ffffff');
   assert.equal(layerA.style.fillColor, baseFillA);
 
+  // Troca rápida de polígono, sem receber mouseout do anterior.
+  layerA.events.mouseover(); layerA.tooltipOpen = true;
+  layerB.events.mouseover(); layerB.tooltipOpen = true;
+  assert.equal(layerA.style.color, '#ffffff');
+  assert.equal(layerA.tooltipOpen, false);
+  assert.equal(layerB.style.color, '#73d5ff');
+  assert.equal(layerA.frontCount, 0);
+  assert.equal(layerB.frontCount, 0);
+  layerA.events.mouseout();
+  assert.equal(layerB.style.color, '#73d5ff');
+  assert.equal(layerB.tooltipOpen, true);
+  ui.elements.get('map').events.mouseleave();
+  assert.equal(layerB.style.color, '#ffffff');
+  assert.equal(layerB.tooltipOpen, false);
+
+  layerA.events.mouseover(); layerA.tooltipOpen = true;
+  ui.run("map.events.movestart()");
+  assert.equal(layerA.style.color, '#ffffff');
+  assert.equal(layerA.tooltipOpen, false);
+
   layerA.events.click();
   assert.equal(layerA.style.color, '#001cb8');
   assert.equal(layerA.style.weight, 3);
@@ -225,6 +246,12 @@ test('aplica borda azul escuro (#001cb8) ao selecionar município e hover azul c
   assert.equal(layerA.style.weight, 0.7);
   assert.equal(layerB.style.color, '#001cb8');
   assert.equal(layerB.style.weight, 3);
+
+  layerB.events.mouseover(); layerB.tooltipOpen = true;
+  ui.run("map.events.zoomstart()");
+  assert.equal(layerB.style.color, '#001cb8');
+  assert.equal(layerB.tooltipOpen, false);
+  assert.equal(ui.run('hoveredLayer'), null);
 
   ui.run('resetMap()');
   assert.equal(ui.run('selectedLayer'), null);

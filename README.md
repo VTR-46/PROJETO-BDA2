@@ -21,6 +21,8 @@ O Oracle guarda indicadores resumidos. O Flask consulta o banco usando uma conta
 
 ## Estrutura do projeto
 
+A modelagem do banco está em [MER e modelo relacional](Oracle/MODELAGEM_MER.md), com as 11 tabelas, PKs, FKs e cardinalidades. O documento inclui um resumo em texto para visualizadores sem suporte a Mermaid.
+
 | Caminho | Conteúdo |
 | --- | --- |
 | `Python/` | Servidor, carga, preparação de arquivos e testes. |

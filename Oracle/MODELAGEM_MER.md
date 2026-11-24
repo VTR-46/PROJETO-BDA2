@@ -6,6 +6,28 @@ Conferido em **24/11/2026** com as tabelas, colunas e constraints instaladas no 
 
 ## Modelo Entidade-Relacionamento (MER)
 
+### Resumo das relações em texto
+
+Este resumo pode ser lido mesmo quando o visualizador não desenha o diagrama Mermaid. As setas mostram a tabela referenciada e a tabela que contém a FK.
+
+```text
+TAB_REGIAO (1) ───────────→ (0..N) TAB_UF
+TAB_UF (1) ───────────────→ (0..N) TAB_MUNICIPIO
+TAB_UF (1) ───────────────→ (0..1) TAB_INDICADOR_UF
+TAB_UF (0..1) ────────────→ (0..N) TAB_PROGRAMA
+TAB_MUNICIPIO (1) ────────→ (0..1) TAB_INDICADOR_MUNICIPIO
+TAB_MUNICIPIO (1) ────────→ (0..N) TAB_MUNICIPIO_PROGRAMA
+TAB_PROGRAMA (1) ─────────→ (0..N) TAB_MUNICIPIO_PROGRAMA
+TAB_NIVEL_INSTRUCAO (1) ──→ (0..1) TAB_PNAD_RESUMO
+TAB_FONTE_DADO (1) ───────→ (0..N) TAB_PNAD_RESUMO
+
+TAB_AUDITORIA_INDICADOR: sem FK; preenchida pelo trigger de auditoria.
+```
+
+Em UF–Programa, um programa nacional não referencia UF; um estadual exige exatamente uma. A associação município–programa é N:M e inclui o ano na chave. A referência lógica da auditoria não aparece entre as nove FKs acima.
+
+### Diagrama completo
+
 ```mermaid
 erDiagram
     TAB_REGIAO ||..o{ TAB_UF : "abrange"
