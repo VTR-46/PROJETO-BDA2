@@ -1,6 +1,8 @@
 -- Erros: -20003 ausente; -20004 duplicidade; -20005 versão;
 -- -20006 dados obrigatórios; -20007 abrangência histórica.
 -- Nenhuma procedure confirma a transação do chamador.
+
+-- Insere ou atualiza metadados de programa pelo código, preservando sua abrangência histórica.
 CREATE OR REPLACE PROCEDURE pr_salvar_programa(
     p_codigo VARCHAR2, p_nome VARCHAR2, p_orgao VARCHAR2, p_publico VARCHAR2,
     p_abrangencia VARCHAR2, p_id_uf NUMBER, p_fonte_url VARCHAR2,
@@ -47,6 +49,7 @@ END;
 /
 
 -- Inserção: versão esperada NULL. Retificação: versão lida + justificativa.
+-- Registra uma oferta anual ou a retifica com controle otimista de versão e justificativa.
 CREATE OR REPLACE PROCEDURE pr_registrar_oferta(
     p_id_municipio NUMBER, p_id_programa NUMBER, p_ano NUMBER, p_turmas NUMBER,
     p_total NUMBER, p_idosos NUMBER, p_fonte_url VARCHAR2, p_publicado_em DATE,
@@ -92,6 +95,7 @@ END;
 /
 
 -- Substituição integral de um indicador existente; NULL continua sendo ausência.
+-- Substitui indicadores municipais existentes após validação e conferência da versão lida.
 CREATE OR REPLACE PROCEDURE pr_atualizar_indicadores(
     p_id_municipio NUMBER, p_total_a NUMBER, p_nao_a NUMBER, p_total_e NUMBER,
     p_baixa_e NUMBER, p_renda NUMBER, p_versao_esperada NUMBER, p_nova_versao OUT NUMBER

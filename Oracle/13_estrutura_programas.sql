@@ -8,6 +8,7 @@ BEGIN
         EXECUTE IMMEDIATE 'ALTER TABLE tab_indicador_municipio ADD
             (versao NUMBER DEFAULT 1 NOT NULL CHECK (versao >= 1 AND versao = TRUNC(versao)))';
     END IF;
+    -- Catálogo de programas e seus metadados, público, abrangência e fonte.
     SELECT COUNT(*) INTO n FROM user_tables WHERE table_name = 'TAB_PROGRAMA';
     IF n = 0 THEN
         EXECUTE IMMEDIATE 'CREATE TABLE tab_programa (
@@ -27,6 +28,7 @@ BEGIN
         )';
         EXECUTE IMMEDIATE 'CREATE INDEX idx_programa_uf ON tab_programa(id_uf)';
     END IF;
+    -- Registra uma oferta documentada por município, programa e ano de referência.
     SELECT COUNT(*) INTO n FROM user_tables WHERE table_name = 'TAB_MUNICIPIO_PROGRAMA';
     IF n = 0 THEN
         EXECUTE IMMEDIATE 'CREATE TABLE tab_municipio_programa (
@@ -49,6 +51,7 @@ BEGIN
         )';
         EXECUTE IMMEDIATE 'CREATE INDEX idx_mun_programa_programa ON tab_municipio_programa(id_programa)';
     END IF;
+    -- Histórico transacional de alterações dos indicadores, com valores JSON anterior/novo.
     SELECT COUNT(*) INTO n FROM user_tables WHERE table_name = 'TAB_AUDITORIA_INDICADOR';
     IF n = 0 THEN
         -- Sem FK: excluir um indicador/município não deve apagar sua história.

@@ -1,4 +1,5 @@
 -- Retorna NULL para ausências/denominador zero; entradas inválidas: -20001.
+-- Calcula parte/total em percentual; devolve NULL para dado ausente ou total zero.
 CREATE OR REPLACE FUNCTION fn_percentual(p_parte NUMBER, p_total NUMBER)
 RETURN NUMBER DETERMINISTIC AUTHID DEFINER IS
 BEGIN
@@ -11,6 +12,7 @@ END;
 /
 
 -- Mesma validação na procedure e no DML direto pelo trigger. Retorna 1 ou -20002.
+-- Valida contagens, pares de valores ausentes e renda antes de gravar indicadores.
 CREATE OR REPLACE FUNCTION fn_validar_indicadores(
     p_total_a NUMBER, p_nao_a NUMBER, p_total_e NUMBER, p_baixa_e NUMBER, p_renda NUMBER
 ) RETURN NUMBER DETERMINISTIC AUTHID DEFINER IS

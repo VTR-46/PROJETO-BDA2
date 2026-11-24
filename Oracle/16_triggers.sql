@@ -1,4 +1,6 @@
 -- Auditoria transacional: falhar/reverter a alteração também reverte o log.
+
+-- Valida indicadores em DML direto, incrementa versão e grava auditoria JSON.
 CREATE OR REPLACE TRIGGER trg_indicador_auditoria
 BEFORE INSERT OR UPDATE OR DELETE ON tab_indicador_municipio FOR EACH ROW
 DECLARE
@@ -52,6 +54,7 @@ END;
 /
 
 -- Regra entre tabelas: uma oferta estadual deve estar na UF do programa.
+-- Garante UF compatível, identidade anual imutável e versão coerente da oferta.
 CREATE OR REPLACE TRIGGER trg_oferta_validacao
 BEFORE INSERT OR UPDATE ON tab_municipio_programa FOR EACH ROW
 DECLARE

@@ -2,12 +2,14 @@
 -- As três primeiras tabelas seguem banco_base.sql; as demais guardam
 -- indicadores consolidados para evitar carregar milhões de linhas na página.
 
+-- Guarda as cinco grandes regiões brasileiras, identificadas por código.
 CREATE TABLE tab_regiao (
     id_regiao NUMBER(10) NOT NULL,
     nome VARCHAR2(100) NOT NULL,
     CONSTRAINT pk_tab_regiao PRIMARY KEY (id_regiao)
 );
 
+-- Relaciona cada unidade federativa à região a que pertence.
 CREATE TABLE tab_uf (
     id_uf NUMBER(10) NOT NULL,
     nome VARCHAR2(100) NOT NULL,
@@ -17,6 +19,7 @@ CREATE TABLE tab_uf (
         REFERENCES tab_regiao (id_regiao)
 );
 
+-- Cadastro geográfico municipal; a chave é o código IBGE do município.
 CREATE TABLE tab_municipio (
     id_municipio NUMBER(10) NOT NULL,
     nome VARCHAR2(150) NOT NULL,
@@ -30,6 +33,7 @@ CREATE TABLE tab_municipio (
 CREATE INDEX idx_uf_id_regiao ON tab_uf (id_regiao);
 CREATE INDEX idx_municipio_id_uf ON tab_municipio (id_uf);
 
+-- Consolida por município alfabetização, escolaridade e renda de pessoas idosas.
 CREATE TABLE tab_indicador_municipio (
     id_municipio NUMBER(10) NOT NULL,
     total_alfabetizacao NUMBER(12),
@@ -51,6 +55,7 @@ CREATE TABLE tab_indicador_municipio (
     CONSTRAINT ck_renda CHECK (renda_media >= 0)
 );
 
+-- Resume a amostra da PNAD e a renda por nível de instrução.
 CREATE TABLE tab_pnad_resumo (
     nivel_instrucao NUMBER(2) NOT NULL,
     total_amostra NUMBER(10) NOT NULL,
