@@ -14,6 +14,9 @@ const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 let countryLayer, cityLayer, cities = [], catalog = [], cityLayers = new Map(), requestId = 0;
 let selectedSearchCode = null;
 let selectedCity = null;
+let selectedLayer = null;
+const HOVER_BORDER = { color: '#73d5ff', weight: 2.5 };
+const SELECTED_BORDER = { color: '#001cb8', weight: 3 };
 let programRows = [], programSort = { key: 'ano_referencia', direction: 'desc' };
 
 async function getJson(url) {
@@ -28,6 +31,25 @@ function color(rate) {
   if (rate <= 20) return '#7cae91';
   if (rate <= 30) return '#e6aa68';
   return '#c86a55';
+}
+
+function applyStyle(layer, hovered = false) {
+  const style = { ...layer.baseStyle };
+  if (hovered) Object.assign(style, HOVER_BORDER);
+  if (layer === selectedLayer) Object.assign(style, SELECTED_BORDER);
+  layer.setStyle(style);
+}
+
+function addHover(layer) {
+  layer.on('mouseover', () => { applyStyle(layer, true); if (layer !== selectedLayer) layer.bringToFront(); selectedLayer?.bringToFront(); });
+  layer.on('mouseout', () => applyStyle(layer));
+}
+
+function highlightCity(layer) {
+  const previous = selectedLayer;
+  selectedLayer = layer || null;
+  if (previous && previous !== selectedLayer) applyStyle(previous);
+  if (selectedLayer) { applyStyle(selectedLayer); selectedLayer.bringToFront(); }
 }
 
 function emptyValue(value, formatter) {
@@ -117,7 +139,8 @@ function selectCity(city) {
   details.append(eyebrow, title, grid, researchButton);
   renderResearch();
   const layer = cityLayers.get(city.id_municipio);
-  if (layer) { layer.bringToFront(); map.fitBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 10 }); }
+  highlightCity(layer);
+  if (layer) map.fitBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 10 });
 }
 
 function renderResearch() {
@@ -264,15 +287,19 @@ async function loadUf(sigla, selectedCode = null) {
     if (cityLayer) map.removeLayer(cityLayer);
     if (countryLayer) map.removeLayer(countryLayer);
     cityLayers = new Map();
+    selectedLayer = null;
+    const cityStyle = feature => ({ color: '#ffffff', weight: 0.7, fillColor: color(byCode.get(Number(feature.properties.id_municipio))?.taxa_analfabetismo), fillOpacity: 0.95 });
     cityLayer = L.geoJSON(geo, {
-      style: feature => ({ color: '#ffffff', weight: 0.7, fillColor: color(byCode.get(Number(feature.properties.id_municipio))?.taxa_analfabetismo), fillOpacity: 0.95 }),
+      style: cityStyle,
       onEachFeature: (feature, layer) => {
         const code = Number(feature.properties.id_municipio);
+        layer.baseStyle = cityStyle(feature);
         cityLayers.set(code, layer);
         const city = byCode.get(code);
         if (city) {
           layer.bindTooltip(city.nome, { sticky: true });
           layer.on('click', () => selectCity(city));
+          addHover(layer);
         }
       }
     }).addTo(map);
@@ -294,7 +321,8 @@ function resetMap() {
   ++requestId;
   selectedCity = null; renderResearch();
   if (cityLayer) map.removeLayer(cityLayer);
-  cityLayer = null; cities = []; cityLayers.clear();
+  cityLayer = null; selectedLayer = null; cities = []; cityLayers.clear();
+  countryLayer?.eachLayer?.(l => applyStyle(l));
   if (countryLayer) { countryLayer.addTo(map); map.fitBounds(countryLayer.getBounds(), { padding: [15, 15] }); }
   ufSelect.value = ''; search.value = ''; selectedSearchCode = null; options.replaceChildren();
   status.textContent = 'Selecione uma UF ou busque um município de qualquer estado.';
@@ -413,14 +441,17 @@ async function initialize() {
       ufSelect.append(option);
     }
     const byUf = new Map(ufs.map(uf => [uf.id_uf, uf]));
+    const ufStyle = feature => ({ color: '#365965', weight: 1.2,
+      fillColor: color(byUf.get(Number(feature.properties.id_uf))?.taxa_analfabetismo), fillOpacity: 0.9 });
     countryLayer = L.geoJSON(geo, {
-      style: feature => ({ color: '#365965', weight: 1.2,
-        fillColor: color(byUf.get(Number(feature.properties.id_uf))?.taxa_analfabetismo), fillOpacity: 0.9 }),
+      style: ufStyle,
       onEachFeature: (feature, layer) => {
         const uf = byUf.get(Number(feature.properties.id_uf));
+        layer.baseStyle = ufStyle(feature);
         if (uf) {
           layer.bindTooltip(`${uf.nome} · ${emptyValue(uf.taxa_analfabetismo, v => `${percent.format(v)}%`)} · ${uf.com_taxa}/${uf.municipios} municípios com taxa`, { sticky: true });
           layer.on('click', () => loadUf(uf.sigla));
+          addHover(layer);
         }
       }
     }).addTo(map);

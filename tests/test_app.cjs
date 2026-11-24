@@ -27,7 +27,21 @@ function interfaceSimulada() {
   };
   const context = vm.createContext({ document, URL, L: {
     map: () => ({ fitBounds() {}, removeLayer() {} }),
-    geoJSON: () => ({ addTo() { return this; }, getBounds: () => [] })
+    geoJSON: (geo, opts = {}) => {
+      const layers = (geo?.features || []).map(feature => {
+        const layer = {
+          events: {}, style: opts.style ? opts.style(feature) : {}, frontCount: 0,
+          setStyle(s) { this.style = s; },
+          on(ev, fn) { this.events[ev] = fn; },
+          bindTooltip() {},
+          bringToFront() { this.frontCount++; },
+          getBounds: () => []
+        };
+        opts.onEachFeature?.(feature, layer);
+        return layer;
+      });
+      return { layers, addTo() { return this; }, getBounds: () => [], eachLayer(fn) { layers.forEach(fn); } };
+    }
   }, fetch: () => new Promise(() => {}) });
   vm.runInContext(readFileSync(join(__dirname, '../static/app.js'), 'utf8'), context);
   return { context, elements, run: code => vm.runInContext(code, context) };
@@ -159,4 +173,60 @@ test('falhas permitem tentar de novo e preservam a pergunta sem fontes inventada
   assert.equal(question.disabled, false);
   assert.match(ui.elements.get('research-status').textContent, /Limite de uso/);
   assert.equal(ui.run('researchStates.get(selectedCity.id_municipio).entries.length'), 1);
+});
+
+test('aplica borda azul escuro (#001cb8) ao selecionar município e hover azul claro (#73d5ff) em estados e municípios', async () => {
+  const ui = interfaceSimulada();
+  const geoUfs = { features: [{ properties: { id_uf: 35 } }] };
+  const geoSp = { features: [{ properties: { id_municipio: cityA.id_municipio } }, { properties: { id_municipio: 3509502 } }] };
+  const campinas = { id_municipio: 3509502, nome: 'Campinas', uf: 'SP', taxa_analfabetismo: 5 };
+  ui.context.fetch = async url => {
+    if (url === '/api/ufs') return http([{ id_uf: 35, sigla: 'SP', nome: 'São Paulo', taxa_analfabetismo: 8, com_taxa: 2, municipios: 2 }]);
+    if (url === '/static/malhas/ufs.geojson') return http(geoUfs);
+    if (url === '/api/catalogo-municipios' || url === '/api/pnad-escolaridade') return http([]);
+    if (url === '/static/malhas/SP.geojson') return http(geoSp);
+    if (url === '/api/municipios?uf=SP') return http([{ ...cityA, taxa_analfabetismo: 4 }, campinas]);
+  };
+  await ui.run('initialize()');
+  const ufLayer = ui.run('countryLayer').layers[0];
+  const ufOriginalFill = ufLayer.style.fillColor;
+  ufLayer.events.mouseover();
+  assert.equal(ufLayer.style.color, '#73d5ff');
+  assert.equal(ufLayer.style.fillColor, ufOriginalFill);
+  ufLayer.events.mouseout();
+  assert.equal(ufLayer.style.color, '#365965');
+
+  ufLayer.events.mouseover();
+  await ui.run("loadUf('SP')");
+  const layerA = ui.run(`cityLayers.get(${cityA.id_municipio})`);
+  const layerB = ui.run('cityLayers.get(3509502)');
+  const baseFillA = layerA.baseStyle.fillColor;
+
+  layerA.events.mouseover();
+  assert.equal(layerA.style.color, '#73d5ff');
+  assert.equal(layerA.style.fillColor, baseFillA);
+  layerA.events.mouseout();
+  assert.equal(layerA.style.color, '#ffffff');
+  assert.equal(layerA.style.fillColor, baseFillA);
+
+  layerA.events.click();
+  assert.equal(layerA.style.color, '#001cb8');
+  assert.equal(layerA.style.weight, 3);
+
+  layerA.events.mouseover();
+  assert.equal(layerA.style.color, '#001cb8');
+  assert.equal(layerA.style.fillColor, baseFillA);
+  layerA.events.mouseout();
+  assert.equal(layerA.style.color, '#001cb8');
+  assert.equal(layerA.style.fillColor, baseFillA);
+
+  layerB.events.click();
+  assert.equal(layerA.style.color, '#ffffff');
+  assert.equal(layerA.style.weight, 0.7);
+  assert.equal(layerB.style.color, '#001cb8');
+  assert.equal(layerB.style.weight, 3);
+
+  ui.run('resetMap()');
+  assert.equal(ui.run('selectedLayer'), null);
+  assert.equal(ufLayer.style.color, '#365965');
 });
