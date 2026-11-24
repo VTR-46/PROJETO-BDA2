@@ -1,10 +1,13 @@
 """Valida os arquivos do projeto e carrega os resumos no Oracle."""
 
 import csv
+import io
 import os
 import re
 import sys
 import unicodedata
+import zipfile
+from contextlib import contextmanager
 from collections import defaultdict
 from decimal import Decimal, ROUND_HALF_UP
 from pathlib import Path
@@ -44,10 +47,26 @@ def number(value):
     return Decimal(value) if value else None
 
 
+@contextmanager
+def sql_source(pattern):
+    """Usa o SQL extraído ou a cópia distribuída no ZIP, sem extrair arquivos."""
+    from fnmatch import fnmatch
+    path = next((ROOT / "INSERT").glob(pattern), None)
+    if path is not None:
+        with path.open(encoding="utf-8") as source:
+            yield source
+        return
+    with zipfile.ZipFile(ROOT / "INSERT" / "Inserts.zip") as archive:
+        name = next((n for n in archive.namelist() if fnmatch(n, pattern)), None)
+        if name is None:
+            raise FileNotFoundError(f"SQL de origem ausente no diretório e no ZIP: {pattern}")
+        with archive.open(name) as raw, io.TextIOWrapper(raw, encoding="utf-8") as source:
+            yield source
+
+
 def geography():
-    path = next((ROOT / "INSERT").glob("Importar-RELATORIO_DTB_BRASIL_2025_MUNICIPIOS*.sql"))
     municipalities = {}
-    with path.open(encoding="utf-8") as source:
+    with sql_source("Importar-RELATORIO_DTB_BRASIL_2025_MUNICIPIOS*.sql") as source:
         for line in source:
             if not line.startswith("VALUES ("):
                 continue
@@ -159,7 +178,7 @@ def census_data():
 def pnad_data():
     pattern = re.compile(r"VALUES \((\d+), (\d+), (NULL|\d+)\);")
     totals = defaultdict(lambda: [0, 0, 0])
-    with (ROOT / "INSERT" / "tab_pnad_idosos_INSERT.sql").open(encoding="utf-8") as source:
+    with sql_source("tab_pnad_idosos_INSERT.sql") as source:
         for line in source:
             match = pattern.fullmatch(line.strip())
             if not match:
@@ -238,6 +257,9 @@ def load():
                 WHEN NOT MATCHED THEN INSERT
                 (nivel_instrucao,total_amostra,amostra_com_renda,renda_media)
                 VALUES (s.nivel,s.total,s.com_renda,s.renda)""", pnad)
+            # Este arquivo contém um único bloco PL/SQL; a transação é da carga.
+            seed = (ROOT / "Oracle" / "17_programas_reais.sql").read_text(encoding="utf-8")
+            cursor.execute(seed.rstrip().removesuffix("/").rstrip())
         connection.commit()
     except Exception:
         connection.rollback()

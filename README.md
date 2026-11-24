@@ -1,5 +1,13 @@
 # Mapa do analfabetismo de idosos no Brasil
 
+## Módulo PL/SQL e programas de alfabetização
+
+O projeto inclui 3 procedures, 2 functions, 2 triggers e 3 tabelas adicionais de
+programas, ofertas municipais e auditoria. Veja a [instalação incremental, fontes
+oficiais e demonstração](Oracle/PLSQL.md). No banco existente, prepare as permissões
+com `Oracle/00_permissoes_plsql.sql` e execute `Oracle/00_incremento_plsql.sql` como
+dono; esse roteiro não recarrega os indicadores do Censo.
+
 Esta página local mostra a **taxa de analfabetismo de pessoas com 60 anos ou mais** em estados e municípios. Ao escolher um município, também aparecem renda média e baixa escolaridade. Dois gráficos comparam renda e analfabetismo municipal e mostram renda por escolaridade na amostra nacional da PNAD.
 
 ## Como funciona

@@ -1,5 +1,12 @@
 # Scripts para Oracle SQL Developer
 
+Para o módulo de programas e os sete objetos PL/SQL, veja o [guia específico](PLSQL.md).
+No banco existente, use `00_incremento_plsql.sql` após conceder as permissões de
+`00_permissoes_plsql.sql` como SYS na PDB correta. `19_demonstracao_plsql.sql` demonstra
+os objetos com rollback; `18_validacao_plsql.sql` verifica sua compilação.
+Não execute `06_visoes.sql` sozinho, pois ele depende das functions e tabelas
+complementares; use `00_incremento_plsql.sql` para executar a sequência correta.
+
 Esta pasta contém a estrutura, os dados consolidados e consultas do projeto em SQL Oracle. Os arquivos de carga usam `MERGE`: executar novamente atualiza os registros por código IBGE, sem duplicá-los ou apagar outras linhas.
 
 ## Banco já criado neste computador

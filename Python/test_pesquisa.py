@@ -68,7 +68,8 @@ class PesquisaTest(unittest.TestCase):
         self.assertEqual(len(data["sugestoes_busca"]), 1)
         self.assertIn("+00:00", data["gerado_em"])
         sql, params = self.query.call_args.args
-        self.assertIn("m.id_municipio=:codigo", sql)
+        self.assertIn("id_municipio=:codigo", sql)
+        self.assertIn("mapa_idosos.vw_mapa_idosos", sql)
         self.assertEqual(params, {"codigo": 3550308})
         req = self.http.call_args.args[0]
         payload = json.loads(req.data)
