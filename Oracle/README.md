@@ -1,24 +1,24 @@
 # Scripts para Oracle SQL Developer
 
-Para o módulo de programas e os sete objetos PL/SQL, veja o [guia específico](PLSQL.md).
-No banco existente, use `00_incremento_plsql.sql` após conceder as permissões de
+Os três roteiros de execução estão em `Oracle/roteiros/`. Para o módulo de programas e os sete objetos PL/SQL, veja o [guia específico](PLSQL.md).
+No banco existente, use `roteiros/00_incremento_plsql.sql` após conceder as permissões de
 `00_permissoes_plsql.sql` como SYS na PDB correta. `19_demonstracao_plsql.sql` demonstra
 os objetos com rollback; `18_validacao_plsql.sql` verifica sua compilação.
 Não execute `06_visoes.sql` sozinho, pois ele depende das functions e tabelas
-complementares; use `00_incremento_plsql.sql` para executar a sequência correta.
+complementares; use `roteiros/00_incremento_plsql.sql` para executar a sequência correta.
 
 Esta pasta contém a estrutura, os dados consolidados e consultas do projeto em SQL Oracle. Os arquivos de carga usam `MERGE`: executar novamente atualiza os registros por código IBGE, sem duplicá-los ou apagar outras linhas.
 
 ## Banco já criado neste computador
 
 1. No SQL Developer, crie ou abra uma conexão com **usuário `MAPA_IDOSOS`**, host `localhost`, porta `1521` e serviço `XEPDB1`. A senha está no arquivo local `.owner.env` da pasta principal; não a copie para um script ou repositório.
-2. Abra `00_atualizar_dados.sql` e execute com **F5 (Executar Script)**. O comando `@@` abre os demais arquivos desta pasta na ordem correta.
+2. Abra `roteiros/00_atualizar_dados.sql` e execute com **F5 (Executar Script)**. Os comandos `@@../` abrem os demais arquivos na pasta `Oracle` na ordem correta.
 3. Confira o resultado de `07_validacao.sql`: **5.571 municípios**, **5.334 com taxa**, **5.330 com taxa e renda**, **27 UFs com taxa** e **76.492 registros PNAD**.
 
 ## Instalação em outro Oracle XE
 
 1. Conecte-se ao serviço `XEPDB1` como `SYS` com papel `SYSDBA`. Execute `00_admin_usuarios.sql` com F5 e informe senhas fortes quando solicitado. A conta `MAPA_IDOSOS_RO` terá apenas acesso de leitura.
-2. Crie uma conexão `MAPA_IDOSOS` com a senha escolhida. Abra `00_instalacao_completa.sql` e execute com F5. Ele cria as tabelas, carrega os dados, cria as views, valida a cobertura e concede leitura.
+2. Crie uma conexão `MAPA_IDOSOS` com a senha escolhida. Abra `roteiros/00_instalacao_completa.sql` e execute com F5. Ele cria as tabelas, carrega os dados, cria as views, valida a cobertura e concede leitura.
 3. Para a página local funcionar com esse novo banco, configure `.env` com `ORACLE_USER=MAPA_IDOSOS_RO`, a senha de leitura e `ORACLE_DSN=localhost:1521/XEPDB1`. O servidor Flask continua necessário para exibir o mapa no navegador.
 
 Execute o roteiro de instalação apenas em um esquema vazio; no banco existente, use o roteiro de atualização. O SQL Developer executa toda a parte **Oracle** do projeto. HTML, Leaflet, malhas GeoJSON e a API Flask não rodam dentro do SQL Developer.

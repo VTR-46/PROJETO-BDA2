@@ -5,7 +5,7 @@
 O projeto inclui 3 procedures, 2 functions, 2 triggers e 3 tabelas adicionais de
 programas, ofertas municipais e auditoria. Veja a [instalação incremental, fontes
 oficiais e demonstração](Oracle/PLSQL.md). No banco existente, prepare as permissões
-com `Oracle/00_permissoes_plsql.sql` e execute `Oracle/00_incremento_plsql.sql` como
+com `Oracle/00_permissoes_plsql.sql` e execute `Oracle/roteiros/00_incremento_plsql.sql` como
 dono; esse roteiro não recarrega os indicadores do Censo.
 
 Esta página local mostra a **taxa de analfabetismo de pessoas com 60 anos ou mais** em estados e municípios. Ao escolher um município, também aparecem renda média e baixa escolaridade. Dois gráficos comparam renda e analfabetismo municipal e mostram renda por escolaridade na amostra nacional da PNAD.
@@ -99,7 +99,7 @@ Há duas formas de instalar o banco. **Escolha uma**; não execute ambas no mesm
 
 ### Pelo Oracle SQL Developer
 
-Siga o [roteiro da pasta Oracle](Oracle/README.md). Resumidamente: execute `Oracle/00_admin_usuarios.sql` como `SYS` no serviço `XEPDB1`; depois execute `Oracle/00_instalacao_completa.sql` como `MAPA_IDOSOS`, usando **F5**. Configure `.env` na raiz:
+Siga o [roteiro da pasta Oracle](Oracle/README.md). Resumidamente: execute `Oracle/00_admin_usuarios.sql` como `SYS` no serviço `XEPDB1`; depois execute `Oracle/roteiros/00_instalacao_completa.sql` como `MAPA_IDOSOS`, usando **F5**. Configure `.env` na raiz:
 
 ```dotenv
 ORACLE_USER=MAPA_IDOSOS_RO
@@ -107,7 +107,7 @@ ORACLE_PASSWORD=SUA_SENHA_DE_LEITURA
 ORACLE_DSN=localhost:1521/XEPDB1
 ```
 
-Instale as dependências e execute `python Python/app.py`. Para atualizar um banco existente, use `Oracle/00_atualizar_dados.sql` como `MAPA_IDOSOS`.
+Instale as dependências e execute `python Python/app.py`. Para atualizar um banco existente, use `Oracle/roteiros/00_atualizar_dados.sql` como `MAPA_IDOSOS`.
 
 ### Pelos scripts Python
 

@@ -11,21 +11,21 @@ exclusivo de idosos. A operação é pelo SQL Developer; a aplicação permanece
    é `XEPDB1`. Conectado como SYS nessa PDB, execute `00_permissoes_plsql.sql` com F5.
    Ele acrescenta CREATE PROCEDURE, CREATE TRIGGER e CREATE SEQUENCE (necessário
    às colunas identity). Não cria usuários nem altera senhas.
-2. Como `MAPA_IDOSOS`, execute `00_incremento_plsql.sql` com F5. Ele cria a estrutura
+2. Como `MAPA_IDOSOS`, execute `roteiros/00_incremento_plsql.sql` com F5. Ele cria a estrutura
    complementar, compila os sete objetos, atualiza views, carrega as fontes reais e
    concede leitura das novas views. Não recarrega os indicadores históricos.
 3. Confira `18_validacao_plsql.sql` e reinicie o Flask se já estava aberto.
 
 Não execute `06_visoes.sql` sozinho: ele depende de `FN_PERCENTUAL` e das tabelas
 criadas na etapa 1. Se ele já foi executado isoladamente, execute novamente
-`00_incremento_plsql.sql` na ordem completa; o roteiro usa `CREATE OR REPLACE`.
+`roteiros/00_incremento_plsql.sql` na ordem completa; o roteiro usa `CREATE OR REPLACE`.
 
 Não execute o instalador incremental no meio de outra transação: DDL no Oracle
 confirma transações implicitamente. A migração é repetível, mas não é uma transação
 única reversível. Em falha, corrija a causa e execute novamente. Não há DROP de dados.
 As views só são substituídas depois de compilar funções e triggers.
 
-Para banco novo, o roteiro `00_instalacao_completa.sql` inclui o módulo depois da
+Para banco novo, o roteiro `roteiros/00_instalacao_completa.sql` inclui o módulo depois da
 carga geográfica e dos indicadores. A alternativa Python continua sendo
 `setup_db.py` e depois `load_data.py`; a carga Python lê os SQLs de origem diretamente
 do ZIP quando não foram extraídos e inclui o bloco de programas na mesma transação.
