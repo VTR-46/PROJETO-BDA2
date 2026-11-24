@@ -131,6 +131,8 @@ Uma **chave primária (PK)** identifica um registro sem repetição. Uma **chave
 
 O [dicionário de dados](DICIONARIO_DADOS.md) explica cada objeto. O [MER e modelo relacional](MODELAGEM_MER.md) mostra as chaves e os relacionamentos.
 
+Para editar o desenho, abra o [arquivo de diagrama .drawio](diagramas/MODELAGEM_MER.drawio) no diagrams.net. As tabelas, os campos e as conexões são editáveis.
+
 ## 7. Como conferir os resultados
 
 Execute [07_validacao.sql](07_validacao.sql) como `MAPA_IDOSOS`. Com a carga distribuída, são esperados:

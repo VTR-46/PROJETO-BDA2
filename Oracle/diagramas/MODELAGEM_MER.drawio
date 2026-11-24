@@ -1,0 +1,369 @@
+<mxfile host="app.diagrams.net" agent="Codex" pages="2">
+  <diagram id="mer" name="MER - tabelas e chaves">
+    <mxGraphModel dx="3406" dy="659" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2160" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="TAB_REGIAO" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_REGIAO" vertex="1">
+          <mxGeometry height="88" width="320" x="250" y="114" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_REGIAO-attr-0" parent="TAB_REGIAO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK  id_regiao : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_REGIAO-attr-1" parent="TAB_REGIAO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="nome : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_UF" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_UF" vertex="1">
+          <mxGeometry height="112" width="320" x="250" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_UF-attr-0" parent="TAB_UF" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK  id_uf : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_UF-attr-1" parent="TAB_UF" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="nome : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_UF-attr-2" parent="TAB_UF" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="FK  id_regiao : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_MUNICIPIO" vertex="1">
+          <mxGeometry height="112" width="320" x="60" y="660" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO-attr-0" parent="TAB_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK  id_municipio : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO-attr-1" parent="TAB_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="nome : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO-attr-2" parent="TAB_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="FK  id_uf : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_MUNICIPIO" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_INDICADOR_MUNICIPIO" vertex="1">
+          <mxGeometry height="208" width="320" x="60" y="884" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_MUNICIPIO-attr-0" parent="TAB_INDICADOR_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK, FK  id_municipio : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_MUNICIPIO-attr-1" parent="TAB_INDICADOR_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="total_alfabetizacao : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_MUNICIPIO-attr-2" parent="TAB_INDICADOR_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="nao_alfabetizados : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_MUNICIPIO-attr-3" parent="TAB_INDICADOR_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="total_escolaridade : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_MUNICIPIO-attr-4" parent="TAB_INDICADOR_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="baixa_escolaridade : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_MUNICIPIO-attr-5" parent="TAB_INDICADOR_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="renda_media : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_MUNICIPIO-attr-6" parent="TAB_INDICADOR_MUNICIPIO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="versao : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PNAD_RESUMO" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_PNAD_RESUMO" vertex="1">
+          <mxGeometry height="160" width="320" x="1510" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PNAD_RESUMO-attr-0" parent="TAB_PNAD_RESUMO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK, FK  nivel_instrucao : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PNAD_RESUMO-attr-1" parent="TAB_PNAD_RESUMO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="total_amostra : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PNAD_RESUMO-attr-2" parent="TAB_PNAD_RESUMO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="amostra_com_renda : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PNAD_RESUMO-attr-3" parent="TAB_PNAD_RESUMO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="renda_media : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PNAD_RESUMO-attr-4" parent="TAB_PNAD_RESUMO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="FK  id_fonte : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_NIVEL_INSTRUCAO" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_NIVEL_INSTRUCAO" vertex="1">
+          <mxGeometry height="88" width="320" x="1380" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_NIVEL_INSTRUCAO-attr-0" parent="TAB_NIVEL_INSTRUCAO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK  nivel_instrucao : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_NIVEL_INSTRUCAO-attr-1" parent="TAB_NIVEL_INSTRUCAO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="nome : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_FONTE_DADO" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_FONTE_DADO" vertex="1">
+          <mxGeometry height="184" width="320" x="1770" y="110" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_FONTE_DADO-attr-0" parent="TAB_FONTE_DADO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK  id_fonte : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_FONTE_DADO-attr-1" parent="TAB_FONTE_DADO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="UK  codigo : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_FONTE_DADO-attr-2" parent="TAB_FONTE_DADO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="descricao : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_FONTE_DADO-attr-3" parent="TAB_FONTE_DADO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="arquivo_origem : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_FONTE_DADO-attr-4" parent="TAB_FONTE_DADO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="ano_referencia : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_FONTE_DADO-attr-5" parent="TAB_FONTE_DADO" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="url : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_UF" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_INDICADOR_UF" vertex="1">
+          <mxGeometry height="112" width="320" x="-300" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_UF-attr-0" parent="TAB_INDICADOR_UF" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK, FK  id_uf : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_UF-attr-1" parent="TAB_INDICADOR_UF" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="total_alfabetizacao : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_INDICADOR_UF-attr-2" parent="TAB_INDICADOR_UF" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="nao_alfabetizados : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_PROGRAMA" vertex="1">
+          <mxGeometry height="256" width="320" x="1050" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-0" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK  id_programa : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-1" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="UK  codigo : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-2" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="nome : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-3" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="orgao : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-4" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="publico : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-5" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="abrangencia : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-6" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="FK  id_uf : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-7" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="fonte_url : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_PROGRAMA-attr-8" parent="TAB_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="consultado_em : DATE" vertex="1">
+          <mxGeometry height="24" width="320" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_MUNICIPIO_PROGRAMA" vertex="1">
+          <mxGeometry height="304" width="320" x="900" y="680" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-0" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK, FK  id_municipio : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-1" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK, FK  id_programa : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-2" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK  ano_referencia : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-3" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="qtd_turmas : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-4" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="participantes_total : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-5" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="participantes_60mais : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-6" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="fonte_url : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-7" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="publicado_em : DATE" vertex="1">
+          <mxGeometry height="24" width="320" y="204" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-8" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="consultado_em : DATE" vertex="1">
+          <mxGeometry height="24" width="320" y="228" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-9" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="justificativa : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="252" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_MUNICIPIO_PROGRAMA-attr-10" parent="TAB_MUNICIPIO_PROGRAMA" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="versao : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="276" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_AUDITORIA_INDICADOR" parent="1" style="swimlane;html=0;startSize=36;horizontal=1;rounded=1;arcSize=6;collapsible=0;whiteSpace=wrap;fontStyle=1;fontSize=14;align=center;fillColor=#dbe9e4;swimlaneFillColor=#ffffff;strokeColor=#315e61;" value="TAB_AUDITORIA_INDICADOR" vertex="1">
+          <mxGeometry height="208" width="320" x="1340" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_AUDITORIA_INDICADOR-attr-0" parent="TAB_AUDITORIA_INDICADOR" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="PK  id_auditoria : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="36" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_AUDITORIA_INDICADOR-attr-1" parent="TAB_AUDITORIA_INDICADOR" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="id_municipio : NUMBER" vertex="1">
+          <mxGeometry height="24" width="320" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_AUDITORIA_INDICADOR-attr-2" parent="TAB_AUDITORIA_INDICADOR" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="operacao : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="84" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_AUDITORIA_INDICADOR-attr-3" parent="TAB_AUDITORIA_INDICADOR" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="usuario : VARCHAR2" vertex="1">
+          <mxGeometry height="24" width="320" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_AUDITORIA_INDICADOR-attr-4" parent="TAB_AUDITORIA_INDICADOR" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="alterado_em : TIMESTAMP" vertex="1">
+          <mxGeometry height="24" width="320" y="132" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_AUDITORIA_INDICADOR-attr-5" parent="TAB_AUDITORIA_INDICADOR" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="anterior : CLOB" vertex="1">
+          <mxGeometry height="24" width="320" y="156" as="geometry" />
+        </mxCell>
+        <mxCell id="TAB_AUDITORIA_INDICADOR-attr-6" parent="TAB_AUDITORIA_INDICADOR" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=12;spacingLeft=10;connectable=0;" value="novo : CLOB" vertex="1">
+          <mxGeometry height="24" width="320" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-0" edge="1" parent="1" source="TAB_REGIAO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;" target="TAB_UF" value="abrange">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-0-parent" connectable="0" parent="fk-0" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-0-child" connectable="0" parent="fk-0" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..N" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-1" edge="1" parent="1" source="TAB_UF" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;" target="TAB_MUNICIPIO" value="localiza">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-1-parent" connectable="0" parent="fk-1" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-1-child" connectable="0" parent="fk-1" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..N" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-2" edge="1" parent="1" source="TAB_MUNICIPIO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;" target="TAB_INDICADOR_MUNICIPIO" value="possui indicadores">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-2-parent" connectable="0" parent="fk-2" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-2-child" connectable="0" parent="fk-2" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..1" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-3" edge="1" parent="1" source="TAB_UF" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;" target="TAB_INDICADOR_UF" value="possui totais oficiais">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-3-parent" connectable="0" parent="fk-3" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-3-child" connectable="0" parent="fk-3" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..1" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-4" edge="1" parent="1" source="TAB_UF" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;" target="TAB_PROGRAMA" value="delimita programa estadual">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-4-parent" connectable="0" parent="fk-4" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-4-child" connectable="0" parent="fk-4" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..N" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-5" edge="1" parent="1" source="TAB_PROGRAMA" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;" target="TAB_MUNICIPIO_PROGRAMA" value="tem ofertas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-5-parent" connectable="0" parent="fk-5" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-5-child" connectable="0" parent="fk-5" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..N" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-6" edge="1" parent="1" source="TAB_MUNICIPIO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;" target="TAB_MUNICIPIO_PROGRAMA" value="recebe ofertas documentadas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-6-parent" connectable="0" parent="fk-6" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-6-child" connectable="0" parent="fk-6" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..N" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-7" edge="1" parent="1" source="TAB_FONTE_DADO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;dashed=1;" target="TAB_PNAD_RESUMO" value="identifica a origem">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-7-parent" connectable="0" parent="fk-7" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-7-child" connectable="0" parent="fk-7" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..N" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-8" edge="1" parent="1" source="TAB_NIVEL_INSTRUCAO" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=0;endArrow=none;startArrow=none;strokeColor=#315e61;fontSize=11;labelBackgroundColor=#ffffff;" target="TAB_PNAD_RESUMO" value="classifica o resumo">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="fk-8-parent" connectable="0" parent="fk-8" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="1" vertex="1">
+          <mxGeometry relative="1" x="-0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="fk-8-child" connectable="0" parent="fk-8" style="edgeLabel;html=0;align=center;verticalAlign=middle;resizable=0;points=[];fontStyle=1;fontSize=13;labelBackgroundColor=#ffffff;" value="0..1" vertex="1">
+          <mxGeometry relative="1" x="0.88" y="-12" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="legend" parent="1" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=13;" value="PK = chave primaria | FK = chave estrangeira | UK = unico&#xa;1 = exatamente um; 0..1 = opcional; 0..N = zero ou muitos.&#xa;Linha continua: FK compoe a PK do filho. Pontilhada: FK nao compoe a PK. Ambas sao FKs." vertex="1">
+          <mxGeometry height="90" width="1330" x="50" y="1090" as="geometry" />
+        </mxCell>
+        <mxCell id="audit-note" parent="1" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=13;" value="Auditoria: id_municipio e referencia logica, sem FK, para preservar o historico.&#xa;Programa NACIONAL: id_uf NULL; ESTADUAL: id_uf obrigatorio.&#xa;Tipos resumidos; precisao, campos opcionais e defaults estao em MODELAGEM_MER.md." vertex="1">
+          <mxGeometry height="75" width="550" x="1690" y="840" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="auditoria" name="Fluxo logico da auditoria - sem FK">
+    <mxGraphModel dx="2100" dy="1200" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2160" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="audit-title" value="Auditoria transacional - fluxo de execucao" style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=26;fontStyle=1;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="60" y="40" width="1400" height="60" />
+        </mxCell>
+        <mxCell id="indicador" value="INSERT / UPDATE / DELETE&#xa;TAB_INDICADOR_MUNICIPIO" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dbe9e4;strokeColor=#315e61;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="60" y="220" width="340" height="100" />
+        </mxCell>
+        <mxCell id="trigger" value="TRG_INDICADOR_AUDITORIA&#xa;Valida, controla versao e grava log" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dbe9e4;strokeColor=#315e61;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="500" y="220" width="340" height="100" />
+        </mxCell>
+        <mxCell id="log" value="TAB_AUDITORIA_INDICADOR&#xa;Codigo municipal e valores JSON" style="rounded=1;whiteSpace=wrap;html=0;fillColor=#dbe9e4;strokeColor=#315e61;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="940" y="220" width="340" height="100" />
+        </mxCell>
+        <mxCell id="flow-0" style="edgeStyle=orthogonalEdgeStyle;html=0;endArrow=block;strokeColor=#315e61;" edge="1" parent="1" source="indicador" target="trigger">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="flow-1" style="edgeStyle=orthogonalEdgeStyle;html=0;endArrow=block;strokeColor=#315e61;" edge="1" parent="1" source="trigger" target="log">
+          <mxGeometry as="geometry" relative="1" />
+        </mxCell>
+        <mxCell id="flow-note" value="As setas nesta pagina representam execucao, nao chaves estrangeiras.&#xa;O log participa da mesma transacao: ROLLBACK tambem reverte a auditoria.&#xa;Alteracoes sem mudanca nos indicadores nao criam novo log." style="text;html=0;align=left;verticalAlign=middle;whiteSpace=wrap;overflow=hidden;fontSize=16;" vertex="1" parent="1">
+          <mxGeometry as="geometry" x="60" y="400" width="1300" height="120" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
