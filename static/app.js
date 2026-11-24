@@ -109,6 +109,7 @@ function selectCity(city) {
     if (!researchStates.has(city.id_municipio)) {
       researchStates.set(city.id_municipio, { entries: [], busy: false, error: '', draft: '' });
     }
+    document.getElementById('research-section').open = true;
     renderResearch();
     researchPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (!researchStates.get(city.id_municipio).entries.length) runResearch(city);
@@ -435,6 +436,9 @@ for (const id of ['program-filter', 'program-state-filter', 'program-year-filter
   document.getElementById(id).addEventListener('change', renderPrograms);
 }
 document.getElementById('program-city-search').addEventListener('input', renderPrograms);
+document.getElementById('map-section').addEventListener('toggle', event => {
+  if (event.target.open) map.invalidateSize();
+});
 for (const key of ['programa', 'municipio', 'ano_referencia', 'ano_alfabetizacao', 'qtd_turmas', 'participantes_total', 'participantes_60mais', 'publicado_em']) {
   document.getElementById(`sort-${key}`).addEventListener('click', () => {
     programSort = { key, direction: programSort.key === key && programSort.direction === 'asc' ? 'desc' : 'asc' };
