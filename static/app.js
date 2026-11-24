@@ -14,6 +14,7 @@ const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 let countryLayer, cityLayer, cities = [], catalog = [], cityLayers = new Map(), requestId = 0;
 let selectedSearchCode = null;
 let selectedCity = null;
+let programRows = [], programSort = { key: 'ano_referencia', direction: 'desc' };
 
 async function getJson(url) {
   const response = await fetch(url);
@@ -319,6 +320,69 @@ async function loadPnad() {
   document.getElementById('pnad-note').textContent = `${integer.format(valid)} de ${integer.format(total)} registros informaram renda. Médias sem pesos amostrais.`;
 }
 
+function addFilterOptions(select, values) {
+  for (const value of [...new Set(values.filter(value => value != null))].sort((a, b) => String(a).localeCompare(String(b), 'pt-BR', { numeric: true }))) {
+    const option = document.createElement('option'); option.value = value; option.textContent = value;
+    select.append(option);
+  }
+}
+
+function renderPrograms() {
+  const target = document.getElementById('programs-rows');
+  const program = document.getElementById('program-filter').value;
+  const uf = document.getElementById('program-state-filter').value;
+  const year = document.getElementById('program-year-filter').value;
+  const city = searchKey(document.getElementById('program-city-search').value);
+  const rows = programRows.filter(row => (!program || row.programa === program) && (!uf || row.uf === uf)
+    && (!year || String(row.ano_referencia) === year) && (!city || searchKey(row.municipio).includes(city)));
+  const { key, direction } = programSort;
+  rows.sort((a, b) => {
+    const left = key === 'municipio' ? `${a.municipio} ${a.uf}` : a[key];
+    const right = key === 'municipio' ? `${b.municipio} ${b.uf}` : b[key];
+    const order = left == null ? (right == null ? 0 : -1) : right == null ? 1
+      : typeof left === 'number' && typeof right === 'number' ? left - right
+        : String(left).localeCompare(String(right), 'pt-BR', { numeric: true, sensitivity: 'base' });
+    return order * (direction === 'asc' ? 1 : -1);
+  });
+  target.replaceChildren();
+  for (const row of rows) {
+    const tr = document.createElement('tr');
+    const values = [row.programa, `${row.municipio} / ${row.uf}`, row.ano_referencia, row.ano_alfabetizacao,
+      row.qtd_turmas, row.participantes_total, row.participantes_60mais,
+      row.publicado_em ? new Date(row.publicado_em).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : null];
+    for (const value of values) {
+      const td = document.createElement('td');
+      td.textContent = value == null ? 'Não informado' : typeof value === 'number' ? integer.format(value) : value;
+      tr.append(td);
+    }
+    const source = document.createElement('td');
+    try {
+      const url = new URL(row.fonte_url);
+      if (url.protocol === 'https:') {
+        const link = document.createElement('a'); link.href = url.href; link.textContent = 'Abrir fonte';
+        link.target = '_blank'; link.rel = 'noopener noreferrer'; source.append(link);
+      } else source.textContent = 'Não informada';
+    } catch { source.textContent = 'Não informada'; }
+    tr.append(source); target.append(tr);
+  }
+  document.getElementById('programs-status').textContent = `${integer.format(rows.length)} de ${integer.format(programRows.length)} ofertas documentadas.`;
+  for (const sortKey of ['programa', 'municipio', 'ano_referencia', 'ano_alfabetizacao', 'qtd_turmas', 'participantes_total', 'participantes_60mais', 'publicado_em']) {
+    const th = document.getElementById(`sort-header-${sortKey}`);
+    th.setAttribute('aria-sort', sortKey === key ? (direction === 'asc' ? 'ascending' : 'descending') : 'none');
+  }
+}
+
+async function loadPrograms() {
+  const status = document.getElementById('programs-status');
+  try {
+    programRows = await getJson('/api/programas-municipio');
+    addFilterOptions(document.getElementById('program-filter'), programRows.map(row => row.programa));
+    addFilterOptions(document.getElementById('program-state-filter'), programRows.map(row => row.uf));
+    addFilterOptions(document.getElementById('program-year-filter'), programRows.map(row => row.ano_referencia));
+    renderPrograms();
+  } catch (error) { status.textContent = `Não foi possível carregar as ofertas. ${error.message}`; }
+}
+
 async function initialize() {
   try {
     const [ufs, geo, municipalities] = await Promise.all([
@@ -345,7 +409,7 @@ async function initialize() {
     }).addTo(map);
     map.fitBounds(countryLayer.getBounds(), { padding: [15, 15] });
     status.textContent = 'Selecione uma UF ou busque um município de qualquer estado.';
-    await loadPnad();
+    await Promise.all([loadPnad(), loadPrograms()]);
   } catch (error) { status.textContent = error.message; }
 }
 
@@ -367,4 +431,14 @@ search.addEventListener('change', commitSearch);
 search.addEventListener('keydown', event => {
   if (event.key === 'Enter') { event.preventDefault(); commitSearch(); }
 });
+for (const id of ['program-filter', 'program-state-filter', 'program-year-filter']) {
+  document.getElementById(id).addEventListener('change', renderPrograms);
+}
+document.getElementById('program-city-search').addEventListener('input', renderPrograms);
+for (const key of ['programa', 'municipio', 'ano_referencia', 'ano_alfabetizacao', 'qtd_turmas', 'participantes_total', 'participantes_60mais', 'publicado_em']) {
+  document.getElementById(`sort-${key}`).addEventListener('click', () => {
+    programSort = { key, direction: programSort.key === key && programSort.direction === 'asc' ? 'desc' : 'asc' };
+    renderPrograms();
+  });
+}
 initialize();

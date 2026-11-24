@@ -83,6 +83,35 @@
         <p id="pnad-note" class="chart-caption"></p>
       </div>
     </section>
+    <section class="programs panel" aria-labelledby="programs-heading">
+      <p class="eyebrow">04 / OFERTAS DOCUMENTADAS</p>
+      <h2 id="programs-heading">Programas de alfabetização para idosos</h2>
+      <p>Ofertas registradas no catálogo do projeto, com município, período e informações de atendimento quando disponíveis.</p>
+      <div class="program-filters" aria-label="Filtros de programas">
+        <label for="program-filter">Programa</label><select id="program-filter"><option value="">Todos</option></select>
+        <label for="program-state-filter">UF</label><select id="program-state-filter"><option value="">Todas</option></select>
+        <label for="program-year-filter">Ano da oferta</label><select id="program-year-filter"><option value="">Todos</option></select>
+        <label for="program-city-search">Município</label><input id="program-city-search" type="search" placeholder="Buscar município" autocomplete="off">
+      </div>
+      <p id="programs-status" class="status" role="status" aria-live="polite">Carregando ofertas…</p>
+      <div class="program-table-wrap">
+        <table class="program-table">
+          <thead><tr>
+            <th id="sort-header-programa" scope="col" aria-sort="none"><button id="sort-programa" type="button" data-sort="programa">Programa</button></th>
+            <th id="sort-header-municipio" scope="col" aria-sort="none"><button id="sort-municipio" type="button" data-sort="municipio">Município / UF</button></th>
+            <th id="sort-header-ano_referencia" scope="col" aria-sort="none"><button id="sort-ano_referencia" type="button" data-sort="ano_referencia">Ano da oferta</button></th>
+            <th id="sort-header-ano_alfabetizacao" scope="col" aria-sort="none"><button id="sort-ano_alfabetizacao" type="button" data-sort="ano_alfabetizacao">Ano do indicador</button></th>
+            <th id="sort-header-qtd_turmas" scope="col" aria-sort="none"><button id="sort-qtd_turmas" type="button" data-sort="qtd_turmas">Turmas</button></th>
+            <th id="sort-header-participantes_total" scope="col" aria-sort="none"><button id="sort-participantes_total" type="button" data-sort="participantes_total">Participantes</button></th>
+            <th id="sort-header-participantes_60mais" scope="col" aria-sort="none"><button id="sort-participantes_60mais" type="button" data-sort="participantes_60mais">Participantes 60+</button></th>
+            <th id="sort-header-publicado_em" scope="col" aria-sort="none"><button id="sort-publicado_em" type="button" data-sort="publicado_em">Publicado</button></th>
+            <th scope="col">Fonte</th>
+          </tr></thead>
+          <tbody id="programs-rows"></tbody>
+        </table>
+      </div>
+      <p class="source-note">A tabela reúne apenas ofertas documentadas neste catálogo; ausência de registro não significa ausência de programa. “Ano do indicador” refere-se ao Censo 2022. Os indicadores descrevem o contexto municipal e não medem o efeito do programa.</p>
+    </section>
     <footer><strong>Como ler os dados</strong><p>Renda é um indicador indireto de qualidade de vida. Baixa escolaridade significa “sem instrução e fundamental incompleto”; não equivale a analfabetismo. A amostra da PNAD não inclui pesos nos arquivos disponíveis e não permite inferir a renda de cada município ou uma relação causal.</p></footer>
   </main>
 </body>

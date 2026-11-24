@@ -128,6 +128,30 @@ def catalogo_municipios():
                     for code, name, uf in rows])
 
 
+@app.get("/api/programas-municipio")
+def programas_municipio():
+    rows = query("""SELECT codigo,programa,orgao,id_municipio,municipio,uf,
+                ano_referencia,qtd_turmas,participantes_total,participantes_60mais,
+                fonte_url,publicado_em,consultado_em,justificativa,versao,
+                ano_alfabetizacao,taxa_analfabetismo,percentual_baixa_escolaridade,renda_media
+                FROM mapa_idosos.vw_programas_municipio ORDER BY ano_referencia DESC,uf,municipio,programa""")
+    return jsonify([{
+        "codigo": code, "programa": program, "orgao": agency,
+        "id_municipio": int(city_code), "municipio": city, "uf": uf,
+        "ano_referencia": int(year) if year is not None else None,
+        "qtd_turmas": int(classes) if classes is not None else None,
+        "participantes_total": int(participants) if participants is not None else None,
+        "participantes_60mais": int(seniors) if seniors is not None else None,
+        "fonte_url": source, "publicado_em": published.isoformat() if published else None,
+        "consultado_em": consulted.isoformat() if consulted else None,
+        "justificativa": rationale, "versao": version,
+        "ano_alfabetizacao": int(census_year) if census_year is not None else None,
+        "taxa_analfabetismo": number(rate),
+        "percentual_baixa_escolaridade": number(low_education), "renda_media": number(income),
+    } for (code, program, agency, city_code, city, uf, year, classes, participants, seniors,
+           source, published, consulted, rationale, version, census_year, rate, low_education, income) in rows])
+
+
 @app.errorhandler(oracledb.Error)
 def oracle_error(error):
     app.logger.error("Falha na consulta Oracle: %s", error)

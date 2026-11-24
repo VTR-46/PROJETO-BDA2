@@ -260,6 +260,25 @@ class PesquisaTest(unittest.TestCase):
         self.assertEqual(city["percentual_baixa_escolaridade"], 60)
         self.assertEqual(city["renda_media"], 1500.25)
 
+    def test_programs_api_formats_offer_and_keeps_missing_values(self):
+        from datetime import datetime
+
+        self.query.return_value = [("ALFA", "Alfabetiza 60+", "Secretaria", 3550308, "São Paulo", "SP",
+                                    2024, None, 120, 45, "https://example.org/oferta",
+                                    datetime(2024, 5, 6), None, "Turmas abertas", "1.0", 2022,
+                                    Decimal("2.5"), None, Decimal("1800.75"))]
+        response = self.client.get("/api/programas-municipio")
+        self.assertEqual(response.status_code, 200)
+        offer = response.get_json()[0]
+        self.assertEqual(offer["id_municipio"], 3550308)
+        self.assertEqual(offer["ano_referencia"], 2024)
+        self.assertIsNone(offer["qtd_turmas"])
+        self.assertEqual(offer["publicado_em"], "2024-05-06T00:00:00")
+        self.assertIsNone(offer["consultado_em"])
+        self.assertEqual(offer["taxa_analfabetismo"], 2.5)
+        sql = self.query.call_args.args[0]
+        self.assertIn("mapa_idosos.vw_programas_municipio", sql)
+
     def test_startup_explains_missing_configuration(self):
         spec = importlib.util.spec_from_file_location("app_sem_config", Path(__file__).with_name("app.py"))
         module = importlib.util.module_from_spec(spec)
