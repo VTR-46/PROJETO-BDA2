@@ -68,7 +68,8 @@ class PesquisaTest(unittest.TestCase):
         self.assertEqual(len(data["sugestoes_busca"]), 1)
         self.assertIn("+00:00", data["gerado_em"])
         sql, params = self.query.call_args.args
-        self.assertIn("m.id_municipio=:codigo", sql)
+        self.assertIn("id_municipio=:codigo", sql)
+        self.assertIn("mapa_idosos.vw_mapa_idosos", sql)
         self.assertEqual(params, {"codigo": 3550308})
         req = self.http.call_args.args[0]
         payload = json.loads(req.data)
@@ -258,6 +259,39 @@ class PesquisaTest(unittest.TestCase):
         self.assertEqual(city["taxa_analfabetismo"], 25)
         self.assertEqual(city["percentual_baixa_escolaridade"], 60)
         self.assertEqual(city["renda_media"], 1500.25)
+
+    def test_pnad_api_uses_database_labels_and_source_metadata(self):
+        self.query.return_value = [(1, "Descrição cadastrada no Oracle", 100, 30, Decimal("1200.25"),
+                                    "Amostra PNAD de idosos utilizada no projeto", None, None)]
+        response = self.client.get("/api/pnad-escolaridade")
+        self.assertEqual(response.status_code, 200)
+        row = response.get_json()[0]
+        self.assertEqual(row["escolaridade"], "Descrição cadastrada no Oracle")
+        self.assertEqual(row["total_amostra"], 100)
+        self.assertEqual(row["renda_media"], 1200.25)
+        self.assertEqual(row["fonte"], "Amostra PNAD de idosos utilizada no projeto")
+        self.assertIsNone(row["ano_fonte"])
+        self.assertIsNone(row["fonte_url"])
+        self.assertIn("vw_pnad_escolaridade", self.query.call_args.args[0])
+
+    def test_programs_api_formats_offer_and_keeps_missing_values(self):
+        from datetime import datetime
+
+        self.query.return_value = [("ALFA", "Alfabetiza 60+", "Secretaria", 3550308, "São Paulo", "SP",
+                                    2024, None, 120, 45, "https://example.org/oferta",
+                                    datetime(2024, 5, 6), None, "Turmas abertas", "1.0", 2022,
+                                    Decimal("2.5"), None, Decimal("1800.75"))]
+        response = self.client.get("/api/programas-municipio")
+        self.assertEqual(response.status_code, 200)
+        offer = response.get_json()[0]
+        self.assertEqual(offer["id_municipio"], 3550308)
+        self.assertEqual(offer["ano_referencia"], 2024)
+        self.assertIsNone(offer["qtd_turmas"])
+        self.assertEqual(offer["publicado_em"], "2024-05-06T00:00:00")
+        self.assertIsNone(offer["consultado_em"])
+        self.assertEqual(offer["taxa_analfabetismo"], 2.5)
+        sql = self.query.call_args.args[0]
+        self.assertIn("mapa_idosos.vw_programas_municipio", sql)
 
     def test_startup_explains_missing_configuration(self):
         spec = importlib.util.spec_from_file_location("app_sem_config", Path(__file__).with_name("app.py"))

@@ -10,3 +10,6 @@ GRANT SELECT ON tab_pnad_resumo TO MAPA_IDOSOS_RO;
 GRANT SELECT ON vw_mapa_idosos TO MAPA_IDOSOS_RO;
 GRANT SELECT ON vw_taxa_uf TO MAPA_IDOSOS_RO;
 GRANT SELECT ON vw_pnad_escolaridade TO MAPA_IDOSOS_RO;
+GRANT SELECT ON vw_catalogo_municipios TO MAPA_IDOSOS_RO;
+GRANT SELECT ON vw_cobertura_uf TO MAPA_IDOSOS_RO;
+GRANT SELECT ON vw_programas_municipio TO MAPA_IDOSOS_RO;

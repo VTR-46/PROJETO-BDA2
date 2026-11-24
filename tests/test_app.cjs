@@ -8,7 +8,7 @@ const vm = require('node:vm');
 class Element {
   constructor(tag = 'div') {
     this.tagName = tag; this.children = []; this.events = {}; this.attributes = {};
-    this.textContent = ''; this.value = ''; this.hidden = false;
+    this.textContent = ''; this.value = ''; this.hidden = false; this.style = {};
   }
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this.children = children; }
@@ -26,8 +26,23 @@ function interfaceSimulada() {
     createElement(tag) { return new Element(tag); }
   };
   const context = vm.createContext({ document, URL, L: {
-    map: () => ({ fitBounds() {}, removeLayer() {} }),
-    geoJSON: () => ({ addTo() { return this; }, getBounds: () => [] })
+    map: () => ({ events: {}, on(event, fn) { this.events[event] = fn; }, fitBounds() {}, removeLayer() {} }),
+    geoJSON: (geo, opts = {}) => {
+      const layers = (geo?.features || []).map(feature => {
+        const layer = {
+          events: {}, style: opts.style ? opts.style(feature) : {}, frontCount: 0,
+          setStyle(s) { this.style = s; },
+          on(ev, fn) { this.events[ev] = fn; },
+          bindTooltip() {},
+          closeTooltip() { this.tooltipOpen = false; },
+          bringToFront() { this.frontCount++; },
+          getBounds: () => []
+        };
+        opts.onEachFeature?.(feature, layer);
+        return layer;
+      });
+      return { layers, addTo() { return this; }, getBounds: () => [], eachLayer(fn) { layers.forEach(fn); } };
+    }
   }, fetch: () => new Promise(() => {}) });
   vm.runInContext(readFileSync(join(__dirname, '../static/app.js'), 'utf8'), context);
   return { context, elements, run: code => vm.runInContext(code, context) };
@@ -44,6 +59,26 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 function selecionar(ui, city) { ui.context.city = city; ui.run('selectCity(city)'); }
 function clicarPesquisa(ui) { ui.elements.get('details').children.at(-1).events.click(); }
 function todos(element) { return [element, ...element.children.flatMap(todos)]; }
+
+test('PNAD mostra rótulos do banco, fonte única e somente links seguros', async () => {
+  for (const [url, year, links] of [[null, null, 0], ['javascript:alert(1)', null, 0], ['https://example.org/pnad', 2020, 1]]) {
+    const ui = interfaceSimulada();
+    const source = { fonte: 'Amostra PNAD do projeto', ano_fonte: year, fonte_url: url };
+    ui.context.fetch = async () => http([
+      { escolaridade: 'Nome no catálogo', renda_media: null, total_amostra: 3, amostra_com_renda: 0, ...source },
+      { escolaridade: 'Outro nível', renda_media: 100, total_amostra: 4, amostra_com_renda: 1, ...source }
+    ]);
+    await ui.run('loadPnad()');
+    const chart = ui.elements.get('pnad-chart');
+    assert.equal(chart.children[0].children[0].textContent, 'Nome no catálogo');
+    assert.equal(chart.children[0].children[1].children[0].style.width, '0%');
+    const note = ui.elements.get('pnad-note');
+    assert.equal(note.children.length, 1);
+    assert.match(note.children[0].textContent, /Amostra PNAD do projeto/);
+    assert.ok(note.children[0].textContent.includes(year == null ? 'Ano não informado' : 'Ano: 2020'));
+    assert.equal(todos(note).filter(node => node.tagName === 'a').length, links);
+  }
+});
 
 test('bloqueia duplicação e exibe texto seguro, fontes e sugestões isoladas', async () => {
   const ui = interfaceSimulada();
@@ -139,4 +174,86 @@ test('falhas permitem tentar de novo e preservam a pergunta sem fontes inventada
   assert.equal(question.disabled, false);
   assert.match(ui.elements.get('research-status').textContent, /Limite de uso/);
   assert.equal(ui.run('researchStates.get(selectedCity.id_municipio).entries.length'), 1);
+});
+
+test('aplica borda azul escuro (#001cb8) ao selecionar município e hover azul claro (#73d5ff) em estados e municípios', async () => {
+  const ui = interfaceSimulada();
+  const geoUfs = { features: [{ properties: { id_uf: 35 } }] };
+  const geoSp = { features: [{ properties: { id_municipio: cityA.id_municipio } }, { properties: { id_municipio: 3509502 } }] };
+  const campinas = { id_municipio: 3509502, nome: 'Campinas', uf: 'SP', taxa_analfabetismo: 5 };
+  ui.context.fetch = async url => {
+    if (url === '/api/ufs') return http([{ id_uf: 35, sigla: 'SP', nome: 'São Paulo', taxa_analfabetismo: 8, com_taxa: 2, municipios: 2 }]);
+    if (url === '/static/malhas/ufs.geojson') return http(geoUfs);
+    if (url === '/api/catalogo-municipios' || url === '/api/pnad-escolaridade') return http([]);
+    if (url === '/static/malhas/SP.geojson') return http(geoSp);
+    if (url === '/api/municipios?uf=SP') return http([{ ...cityA, taxa_analfabetismo: 4 }, campinas]);
+  };
+  await ui.run('initialize()');
+  const ufLayer = ui.run('countryLayer').layers[0];
+  const ufOriginalFill = ufLayer.style.fillColor;
+  ufLayer.events.mouseover();
+  assert.equal(ufLayer.style.color, '#73d5ff');
+  assert.equal(ufLayer.style.fillColor, ufOriginalFill);
+  ufLayer.events.mouseout();
+  assert.equal(ufLayer.style.color, '#365965');
+
+  ufLayer.events.mouseover();
+  await ui.run("loadUf('SP')");
+  const layerA = ui.run(`cityLayers.get(${cityA.id_municipio})`);
+  const layerB = ui.run('cityLayers.get(3509502)');
+  const baseFillA = layerA.baseStyle.fillColor;
+
+  layerA.events.mouseover();
+  assert.equal(layerA.style.color, '#73d5ff');
+  assert.equal(layerA.style.fillColor, baseFillA);
+  layerA.events.mouseout();
+  assert.equal(layerA.style.color, '#ffffff');
+  assert.equal(layerA.style.fillColor, baseFillA);
+
+  // Troca rápida de polígono, sem receber mouseout do anterior.
+  layerA.events.mouseover(); layerA.tooltipOpen = true;
+  layerB.events.mouseover(); layerB.tooltipOpen = true;
+  assert.equal(layerA.style.color, '#ffffff');
+  assert.equal(layerA.tooltipOpen, false);
+  assert.equal(layerB.style.color, '#73d5ff');
+  assert.equal(layerA.frontCount, 0);
+  assert.equal(layerB.frontCount, 0);
+  layerA.events.mouseout();
+  assert.equal(layerB.style.color, '#73d5ff');
+  assert.equal(layerB.tooltipOpen, true);
+  ui.elements.get('map').events.mouseleave();
+  assert.equal(layerB.style.color, '#ffffff');
+  assert.equal(layerB.tooltipOpen, false);
+
+  layerA.events.mouseover(); layerA.tooltipOpen = true;
+  ui.run("map.events.movestart()");
+  assert.equal(layerA.style.color, '#ffffff');
+  assert.equal(layerA.tooltipOpen, false);
+
+  layerA.events.click();
+  assert.equal(layerA.style.color, '#001cb8');
+  assert.equal(layerA.style.weight, 3);
+
+  layerA.events.mouseover();
+  assert.equal(layerA.style.color, '#001cb8');
+  assert.equal(layerA.style.fillColor, baseFillA);
+  layerA.events.mouseout();
+  assert.equal(layerA.style.color, '#001cb8');
+  assert.equal(layerA.style.fillColor, baseFillA);
+
+  layerB.events.click();
+  assert.equal(layerA.style.color, '#ffffff');
+  assert.equal(layerA.style.weight, 0.7);
+  assert.equal(layerB.style.color, '#001cb8');
+  assert.equal(layerB.style.weight, 3);
+
+  layerB.events.mouseover(); layerB.tooltipOpen = true;
+  ui.run("map.events.zoomstart()");
+  assert.equal(layerB.style.color, '#001cb8');
+  assert.equal(layerB.tooltipOpen, false);
+  assert.equal(ui.run('hoveredLayer'), null);
+
+  ui.run('resetMap()');
+  assert.equal(ui.run('selectedLayer'), null);
+  assert.equal(ufLayer.style.color, '#365965');
 });

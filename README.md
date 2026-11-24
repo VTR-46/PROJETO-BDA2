@@ -1,5 +1,13 @@
 # Mapa do analfabetismo de idosos no Brasil
 
+## Módulo PL/SQL e programas de alfabetização
+
+O projeto inclui 3 procedures, 2 functions, 2 triggers e 3 tabelas adicionais de
+programas, ofertas municipais e auditoria. Veja a [instalação incremental, fontes
+oficiais e demonstração](Oracle/PLSQL.md). No banco existente, prepare as permissões
+com `Oracle/00_permissoes_plsql.sql` e execute `Oracle/roteiros/00_incremento_plsql.sql` como
+dono; esse roteiro não recarrega os indicadores do Censo.
+
 Esta página local mostra a **taxa de analfabetismo de pessoas com 60 anos ou mais** em estados e municípios. Ao escolher um município, também aparecem renda média e baixa escolaridade. Dois gráficos comparam renda e analfabetismo municipal e mostram renda por escolaridade na amostra nacional da PNAD.
 
 ## Como funciona
@@ -12,6 +20,8 @@ CSV, INSERTs e códigos geográficos → cálculo em Python → Oracle XE
 O Oracle guarda indicadores resumidos. O Flask consulta o banco usando uma conta de leitura e entrega JSON à página. O Leaflet desenha os mapas com os GeoJSON já preparados. O SQL Developer executa a parte Oracle; o Flask continua necessário para abrir a página.
 
 ## Estrutura do projeto
+
+A modelagem do banco está em [MER e modelo relacional](Oracle/MODELAGEM_MER.md), com as 11 tabelas, PKs, FKs e cardinalidades. O documento inclui um resumo em texto para visualizadores sem suporte a Mermaid.
 
 | Caminho | Conteúdo |
 | --- | --- |
@@ -91,7 +101,7 @@ Há duas formas de instalar o banco. **Escolha uma**; não execute ambas no mesm
 
 ### Pelo Oracle SQL Developer
 
-Siga o [roteiro da pasta Oracle](Oracle/README.md). Resumidamente: execute `Oracle/00_admin_usuarios.sql` como `SYS` no serviço `XEPDB1`; depois execute `Oracle/00_instalacao_completa.sql` como `MAPA_IDOSOS`, usando **F5**. Configure `.env` na raiz:
+Siga o [roteiro da pasta Oracle](Oracle/README.md). Resumidamente: execute `Oracle/00_admin_usuarios.sql` como `SYS` no serviço `XEPDB1`; depois execute `Oracle/roteiros/00_instalacao_completa.sql` como `MAPA_IDOSOS`, usando **F5**. Configure `.env` na raiz:
 
 ```dotenv
 ORACLE_USER=MAPA_IDOSOS_RO
@@ -99,7 +109,7 @@ ORACLE_PASSWORD=SUA_SENHA_DE_LEITURA
 ORACLE_DSN=localhost:1521/XEPDB1
 ```
 
-Instale as dependências e execute `python Python/app.py`. Para atualizar um banco existente, use `Oracle/00_atualizar_dados.sql` como `MAPA_IDOSOS`.
+Instale as dependências e execute `python Python/app.py`. Para atualizar um banco existente, use `Oracle/roteiros/00_atualizar_dados.sql` como `MAPA_IDOSOS`.
 
 ### Pelos scripts Python
 
@@ -143,6 +153,8 @@ python Python/load_data.py --check
 
 ## Banco e API
 
+O projeto tem 11 tabelas: as 3 geográficas base e 8 adicionais. Os catálogos `TAB_NIVEL_INSTRUCAO` e `TAB_FONTE_DADO` fornecem os nomes e a fonte do gráfico **Renda por escolaridade** por meio da view PNAD. No banco existente, execute `Oracle/roteiros/00_incremento_plsql.sql` como dono antes de reiniciar o Flask com esta versão. O ano e a URL da amostra permanecem não informados quando não documentados.
+
 `tab_regiao`, `tab_uf` e `tab_municipio` formam a hierarquia geográfica. `tab_indicador_uf` e `tab_indicador_municipio` guardam os indicadores; `tab_pnad_resumo` guarda o resumo nacional. As views `vw_taxa_uf`, `vw_mapa_idosos` e `vw_pnad_escolaridade` facilitam consultas no SQL Developer.
 
 | Endereço | Resposta |
@@ -150,7 +162,7 @@ python Python/load_data.py --check
 | `/api/ufs` | 27 UFs, contagens, taxa estadual e cobertura municipal. |
 | `/api/catalogo-municipios` | Código IBGE, nome e UF dos municípios para a busca nacional. |
 | `/api/municipios?uf=SP` | Indicadores dos municípios da UF. |
-| `/api/pnad-escolaridade` | Renda média e tamanho da amostra por escolaridade. |
+| `/api/pnad-escolaridade` | Renda média e tamanho da amostra por escolaridade, com `fonte`, `ano_fonte` e `fonte_url` (os dois últimos podem ser nulos). |
 | `POST /api/municipios/<codigo>/pesquisa` | Relatório ou resposta do Gemini com indicadores do Oracle e fontes. |
 
 A pesquisa aceita `{}` para gerar o relatório ou `{"pergunta":"...","historico":[{"role":"assistant","content":"relatório inicial"}]}` para perguntar. O histórico começa com o relatório (`assistant`), seguido de até cinco pares `user`/`assistant`. Responde com `municipio`, `indicadores`, `resposta`, `fontes` (`titulo`, `url`, `trecho`), `sugestoes_busca` (HTML do Google, isolado em iframe com sandbox) e `gerado_em` (UTC). Erros usam `{"erro":"..."}`: 400 entrada inválida, 404 município inexistente, 413 corpo acima de 512 KiB, 429 cota, 502 falha do provedor/rede, 503 configuração/Oracle e 504 timeout.

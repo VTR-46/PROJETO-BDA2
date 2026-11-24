@@ -14,6 +14,11 @@ const percent = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
 let countryLayer, cityLayer, cities = [], catalog = [], cityLayers = new Map(), requestId = 0;
 let selectedSearchCode = null;
 let selectedCity = null;
+let selectedLayer = null;
+let hoveredLayer = null;
+const HOVER_BORDER = { color: '#73d5ff', weight: 2.5 };
+const SELECTED_BORDER = { color: '#001cb8', weight: 3 };
+let programRows = [], programSort = { key: 'ano_referencia', direction: 'desc' };
 
 async function getJson(url) {
   const response = await fetch(url);
@@ -27,6 +32,43 @@ function color(rate) {
   if (rate <= 20) return '#7cae91';
   if (rate <= 30) return '#e6aa68';
   return '#c86a55';
+}
+
+function applyStyle(layer, hovered = false) {
+  const style = { ...layer.baseStyle };
+  if (hovered) Object.assign(style, HOVER_BORDER);
+  if (layer === selectedLayer) Object.assign(style, SELECTED_BORDER);
+  layer.setStyle(style);
+}
+
+function clearHover() {
+  const previous = hoveredLayer;
+  hoveredLayer = null;
+  if (previous) {
+    previous.closeTooltip();
+    applyStyle(previous);
+  }
+}
+
+function addHover(layer) {
+  layer.on('mouseover', () => {
+    if (hoveredLayer !== layer) clearHover();
+    hoveredLayer = layer;
+    // Reordenar paths SVG durante o hover pode interromper os eventos de saída.
+    applyStyle(layer, true);
+  });
+  layer.on('mouseout', () => {
+    if (hoveredLayer === layer) clearHover();
+    else layer.closeTooltip();
+  });
+}
+
+function highlightCity(layer) {
+  clearHover();
+  const previous = selectedLayer;
+  selectedLayer = layer || null;
+  if (previous && previous !== selectedLayer) applyStyle(previous);
+  if (selectedLayer) { applyStyle(selectedLayer); selectedLayer.bringToFront(); }
 }
 
 function emptyValue(value, formatter) {
@@ -108,6 +150,7 @@ function selectCity(city) {
     if (!researchStates.has(city.id_municipio)) {
       researchStates.set(city.id_municipio, { entries: [], busy: false, error: '', draft: '' });
     }
+    document.getElementById('research-section').open = true;
     renderResearch();
     researchPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     if (!researchStates.get(city.id_municipio).entries.length) runResearch(city);
@@ -115,7 +158,8 @@ function selectCity(city) {
   details.append(eyebrow, title, grid, researchButton);
   renderResearch();
   const layer = cityLayers.get(city.id_municipio);
-  if (layer) { layer.bringToFront(); map.fitBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 10 }); }
+  highlightCity(layer);
+  if (layer) map.fitBounds(layer.getBounds(), { padding: [50, 50], maxZoom: 10 });
 }
 
 function renderResearch() {
@@ -247,6 +291,7 @@ function drawScatter() {
 
 async function loadUf(sigla, selectedCode = null) {
   if (!sigla) return resetMap();
+  clearHover();
   selectedCity = null; renderResearch();
   details.replaceChildren();
   const current = ++requestId;
@@ -262,15 +307,19 @@ async function loadUf(sigla, selectedCode = null) {
     if (cityLayer) map.removeLayer(cityLayer);
     if (countryLayer) map.removeLayer(countryLayer);
     cityLayers = new Map();
+    selectedLayer = null;
+    const cityStyle = feature => ({ color: '#ffffff', weight: 0.7, fillColor: color(byCode.get(Number(feature.properties.id_municipio))?.taxa_analfabetismo), fillOpacity: 0.95 });
     cityLayer = L.geoJSON(geo, {
-      style: feature => ({ color: '#ffffff', weight: 0.7, fillColor: color(byCode.get(Number(feature.properties.id_municipio))?.taxa_analfabetismo), fillOpacity: 0.95 }),
+      style: cityStyle,
       onEachFeature: (feature, layer) => {
         const code = Number(feature.properties.id_municipio);
+        layer.baseStyle = cityStyle(feature);
         cityLayers.set(code, layer);
         const city = byCode.get(code);
         if (city) {
           layer.bindTooltip(city.nome, { sticky: true });
           layer.on('click', () => selectCity(city));
+          addHover(layer);
         }
       }
     }).addTo(map);
@@ -290,9 +339,11 @@ async function loadUf(sigla, selectedCode = null) {
 
 function resetMap() {
   ++requestId;
+  clearHover();
   selectedCity = null; renderResearch();
   if (cityLayer) map.removeLayer(cityLayer);
-  cityLayer = null; cities = []; cityLayers.clear();
+  cityLayer = null; selectedLayer = null; cities = []; cityLayers.clear();
+  countryLayer?.eachLayer?.(l => applyStyle(l));
   if (countryLayer) { countryLayer.addTo(map); map.fitBounds(countryLayer.getBounds(), { padding: [15, 15] }); }
   ufSelect.value = ''; search.value = ''; selectedSearchCode = null; options.replaceChildren();
   status.textContent = 'Selecione uma UF ou busque um município de qualquer estado.';
@@ -304,19 +355,98 @@ function resetMap() {
 async function loadPnad() {
   const rows = await getJson('/api/pnad-escolaridade');
   const target = document.getElementById('pnad-chart');
+  target.replaceChildren();
   const max = Math.max(...rows.map(row => row.renda_media || 0));
   for (const row of rows) {
     const item = document.createElement('div'); item.className = 'bar-row';
     const label = document.createElement('span'); label.textContent = row.escolaridade;
     const track = document.createElement('div'); track.className = 'bar-track';
-    const bar = document.createElement('div'); bar.className = 'bar'; bar.style.width = `${100 * row.renda_media / max}%`;
+    const bar = document.createElement('div'); bar.className = 'bar'; bar.style.width = max > 0 ? `${100 * (row.renda_media ?? 0) / max}%` : '0%';
     track.append(bar);
     const value = document.createElement('strong'); value.textContent = emptyValue(row.renda_media, v => money.format(v));
     item.append(label, track, value); target.append(item);
   }
   const valid = rows.reduce((sum, row) => sum + row.amostra_com_renda, 0);
   const total = rows.reduce((sum, row) => sum + row.total_amostra, 0);
-  document.getElementById('pnad-note').textContent = `${integer.format(valid)} de ${integer.format(total)} registros informaram renda. Médias sem pesos amostrais.`;
+  const note = document.getElementById('pnad-note');
+  note.textContent = `${integer.format(valid)} de ${integer.format(total)} registros informaram renda. Médias sem pesos amostrais.`;
+  const sources = new Map(rows.map(row => [JSON.stringify([row.fonte, row.ano_fonte, row.fonte_url]), row]));
+  for (const row of sources.values()) {
+    const source = document.createElement('span');
+    source.textContent = ` Fonte: ${row.fonte || 'Não informada'}. ${row.ano_fonte == null ? 'Ano não informado' : `Ano: ${row.ano_fonte}`}.`;
+    try {
+      const url = new URL(row.fonte_url);
+      if (['https:', 'http:'].includes(url.protocol)) {
+        const link = document.createElement('a'); link.textContent = ' Consultar fonte';
+        link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
+        source.append(link);
+      }
+    } catch { /* A fonte pode ter somente o arquivo local documentado. */ }
+    note.append(source);
+  }
+}
+
+function addFilterOptions(select, values) {
+  for (const value of [...new Set(values.filter(value => value != null))].sort((a, b) => String(a).localeCompare(String(b), 'pt-BR', { numeric: true }))) {
+    const option = document.createElement('option'); option.value = value; option.textContent = value;
+    select.append(option);
+  }
+}
+
+function renderPrograms() {
+  const target = document.getElementById('programs-rows');
+  const program = document.getElementById('program-filter').value;
+  const uf = document.getElementById('program-state-filter').value;
+  const year = document.getElementById('program-year-filter').value;
+  const city = searchKey(document.getElementById('program-city-search').value);
+  const rows = programRows.filter(row => (!program || row.programa === program) && (!uf || row.uf === uf)
+    && (!year || String(row.ano_referencia) === year) && (!city || searchKey(row.municipio).includes(city)));
+  const { key, direction } = programSort;
+  rows.sort((a, b) => {
+    const left = key === 'municipio' ? `${a.municipio} ${a.uf}` : a[key];
+    const right = key === 'municipio' ? `${b.municipio} ${b.uf}` : b[key];
+    const order = left == null ? (right == null ? 0 : -1) : right == null ? 1
+      : typeof left === 'number' && typeof right === 'number' ? left - right
+        : String(left).localeCompare(String(right), 'pt-BR', { numeric: true, sensitivity: 'base' });
+    return order * (direction === 'asc' ? 1 : -1);
+  });
+  target.replaceChildren();
+  for (const row of rows) {
+    const tr = document.createElement('tr');
+    const values = [row.programa, `${row.municipio} / ${row.uf}`, row.ano_referencia, row.ano_alfabetizacao,
+      row.qtd_turmas, row.participantes_total, row.participantes_60mais,
+      row.publicado_em ? new Date(row.publicado_em).toLocaleDateString('pt-BR', { timeZone: 'UTC' }) : null];
+    for (const value of values) {
+      const td = document.createElement('td');
+      td.textContent = value == null ? 'Não informado' : typeof value === 'number' ? integer.format(value) : value;
+      tr.append(td);
+    }
+    const source = document.createElement('td');
+    try {
+      const url = new URL(row.fonte_url);
+      if (url.protocol === 'https:') {
+        const link = document.createElement('a'); link.href = url.href; link.textContent = 'Abrir fonte';
+        link.target = '_blank'; link.rel = 'noopener noreferrer'; source.append(link);
+      } else source.textContent = 'Não informada';
+    } catch { source.textContent = 'Não informada'; }
+    tr.append(source); target.append(tr);
+  }
+  document.getElementById('programs-status').textContent = `${integer.format(rows.length)} de ${integer.format(programRows.length)} ofertas documentadas.`;
+  for (const sortKey of ['programa', 'municipio', 'ano_referencia', 'ano_alfabetizacao', 'qtd_turmas', 'participantes_total', 'participantes_60mais', 'publicado_em']) {
+    const th = document.getElementById(`sort-header-${sortKey}`);
+    th.setAttribute('aria-sort', sortKey === key ? (direction === 'asc' ? 'ascending' : 'descending') : 'none');
+  }
+}
+
+async function loadPrograms() {
+  const status = document.getElementById('programs-status');
+  try {
+    programRows = await getJson('/api/programas-municipio');
+    addFilterOptions(document.getElementById('program-filter'), programRows.map(row => row.programa));
+    addFilterOptions(document.getElementById('program-state-filter'), programRows.map(row => row.uf));
+    addFilterOptions(document.getElementById('program-year-filter'), programRows.map(row => row.ano_referencia));
+    renderPrograms();
+  } catch (error) { status.textContent = `Não foi possível carregar as ofertas. ${error.message}`; }
 }
 
 async function initialize() {
@@ -332,20 +462,23 @@ async function initialize() {
       ufSelect.append(option);
     }
     const byUf = new Map(ufs.map(uf => [uf.id_uf, uf]));
+    const ufStyle = feature => ({ color: '#365965', weight: 1.2,
+      fillColor: color(byUf.get(Number(feature.properties.id_uf))?.taxa_analfabetismo), fillOpacity: 0.9 });
     countryLayer = L.geoJSON(geo, {
-      style: feature => ({ color: '#365965', weight: 1.2,
-        fillColor: color(byUf.get(Number(feature.properties.id_uf))?.taxa_analfabetismo), fillOpacity: 0.9 }),
+      style: ufStyle,
       onEachFeature: (feature, layer) => {
         const uf = byUf.get(Number(feature.properties.id_uf));
+        layer.baseStyle = ufStyle(feature);
         if (uf) {
           layer.bindTooltip(`${uf.nome} · ${emptyValue(uf.taxa_analfabetismo, v => `${percent.format(v)}%`)} · ${uf.com_taxa}/${uf.municipios} municípios com taxa`, { sticky: true });
           layer.on('click', () => loadUf(uf.sigla));
+          addHover(layer);
         }
       }
     }).addTo(map);
     map.fitBounds(countryLayer.getBounds(), { padding: [15, 15] });
     status.textContent = 'Selecione uma UF ou busque um município de qualquer estado.';
-    await loadPnad();
+    await Promise.all([loadPnad(), loadPrograms()]);
   } catch (error) { status.textContent = error.message; }
 }
 
@@ -367,4 +500,21 @@ search.addEventListener('change', commitSearch);
 search.addEventListener('keydown', event => {
   if (event.key === 'Enter') { event.preventDefault(); commitSearch(); }
 });
+for (const id of ['program-filter', 'program-state-filter', 'program-year-filter']) {
+  document.getElementById(id).addEventListener('change', renderPrograms);
+}
+document.getElementById('program-city-search').addEventListener('input', renderPrograms);
+document.getElementById('map').addEventListener('mouseleave', clearHover);
+map.on('movestart', clearHover);
+map.on('zoomstart', clearHover);
+document.getElementById('map-section').addEventListener('toggle', event => {
+  clearHover();
+  if (event.target.open) map.invalidateSize();
+});
+for (const key of ['programa', 'municipio', 'ano_referencia', 'ano_alfabetizacao', 'qtd_turmas', 'participantes_total', 'participantes_60mais', 'publicado_em']) {
+  document.getElementById(`sort-${key}`).addEventListener('click', () => {
+    programSort = { key, direction: programSort.key === key && programSort.direction === 'asc' ? 'desc' : 'asc' };
+    renderPrograms();
+  });
+}
 initialize();
