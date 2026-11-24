@@ -8,7 +8,7 @@ const vm = require('node:vm');
 class Element {
   constructor(tag = 'div') {
     this.tagName = tag; this.children = []; this.events = {}; this.attributes = {};
-    this.textContent = ''; this.value = ''; this.hidden = false;
+    this.textContent = ''; this.value = ''; this.hidden = false; this.style = {};
   }
   append(...children) { this.children.push(...children); }
   replaceChildren(...children) { this.children = children; }
@@ -58,6 +58,26 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 function selecionar(ui, city) { ui.context.city = city; ui.run('selectCity(city)'); }
 function clicarPesquisa(ui) { ui.elements.get('details').children.at(-1).events.click(); }
 function todos(element) { return [element, ...element.children.flatMap(todos)]; }
+
+test('PNAD mostra rótulos do banco, fonte única e somente links seguros', async () => {
+  for (const [url, year, links] of [[null, null, 0], ['javascript:alert(1)', null, 0], ['https://example.org/pnad', 2020, 1]]) {
+    const ui = interfaceSimulada();
+    const source = { fonte: 'Amostra PNAD do projeto', ano_fonte: year, fonte_url: url };
+    ui.context.fetch = async () => http([
+      { escolaridade: 'Nome no catálogo', renda_media: null, total_amostra: 3, amostra_com_renda: 0, ...source },
+      { escolaridade: 'Outro nível', renda_media: 100, total_amostra: 4, amostra_com_renda: 1, ...source }
+    ]);
+    await ui.run('loadPnad()');
+    const chart = ui.elements.get('pnad-chart');
+    assert.equal(chart.children[0].children[0].textContent, 'Nome no catálogo');
+    assert.equal(chart.children[0].children[1].children[0].style.width, '0%');
+    const note = ui.elements.get('pnad-note');
+    assert.equal(note.children.length, 1);
+    assert.match(note.children[0].textContent, /Amostra PNAD do projeto/);
+    assert.ok(note.children[0].textContent.includes(year == null ? 'Ano não informado' : 'Ano: 2020'));
+    assert.equal(todos(note).filter(node => node.tagName === 'a').length, links);
+  }
+});
 
 test('bloqueia duplicação e exibe texto seguro, fontes e sugestões isoladas', async () => {
   const ui = interfaceSimulada();

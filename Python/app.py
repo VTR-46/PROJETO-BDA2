@@ -9,7 +9,7 @@ from flask import Flask, jsonify, render_template, request
 from werkzeug.exceptions import BadRequest, HTTPException, NotFound
 
 from gemini import pesquisar, validar_pedido
-from load_data import PNAD_LABELS, UF
+from load_data import UF
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -64,13 +64,8 @@ def index():
 
 @app.get("/api/ufs")
 def ufs():
-    rows = query("""SELECT u.id_uf,u.nome,COUNT(m.id_municipio),
-                COUNT(CASE WHEN i.total_alfabetizacao IS NOT NULL THEN 1 END),
-                iu.total_alfabetizacao,iu.nao_alfabetizados
-                FROM mapa_idosos.tab_uf u JOIN mapa_idosos.tab_municipio m ON m.id_uf=u.id_uf
-                LEFT JOIN mapa_idosos.tab_indicador_municipio i ON i.id_municipio=m.id_municipio
-                LEFT JOIN mapa_idosos.tab_indicador_uf iu ON iu.id_uf=u.id_uf
-                GROUP BY u.id_uf,u.nome,iu.total_alfabetizacao,iu.nao_alfabetizados ORDER BY u.nome""")
+    rows = query("""SELECT id_uf,nome,municipios,com_taxa,total_alfabetizacao,nao_alfabetizados
+                FROM mapa_idosos.vw_cobertura_uf ORDER BY nome""")
     return jsonify([{"id_uf": int(code), "sigla": UF[int(code)][0], "nome": name,
                      "municipios": int(total), "com_taxa": int(available),
                      "total_alfabetizacao": int(total_a) if total_a is not None else None,
@@ -85,11 +80,9 @@ def municipios():
     sigla = request.args.get("uf", "").upper()
     if sigla not in UF_BY_SIGLA:
         return jsonify({"erro": "Informe uma sigla de UF válida."}), 400
-    rows = query("""SELECT m.id_municipio,m.nome,i.total_alfabetizacao,i.nao_alfabetizados,
-                i.total_escolaridade,i.baixa_escolaridade,i.renda_media
-                FROM mapa_idosos.tab_municipio m LEFT JOIN mapa_idosos.tab_indicador_municipio i
-                ON i.id_municipio=m.id_municipio
-                WHERE m.id_uf=:uf ORDER BY m.nome""", {"uf": UF_BY_SIGLA[sigla]})
+    rows = query("""SELECT id_municipio,municipio,total_alfabetizacao,nao_alfabetizados,
+                total_escolaridade,baixa_escolaridade,renda_media
+                FROM mapa_idosos.vw_mapa_idosos WHERE id_uf=:uf ORDER BY municipio""", {"uf": UF_BY_SIGLA[sigla]})
     return jsonify([municipio_json(row, sigla) for row in rows])
 
 
@@ -99,10 +92,9 @@ def pesquisa_municipio(codigo):
         if not 1000000 <= codigo <= 9999999:
             raise BadRequest("Informe um código IBGE de sete dígitos.")
         pergunta, historico = validar_pedido(request.get_json(silent=True))
-        rows = query("""SELECT m.id_municipio,m.nome,i.total_alfabetizacao,i.nao_alfabetizados,
-                    i.total_escolaridade,i.baixa_escolaridade,i.renda_media,m.id_uf
-                    FROM mapa_idosos.tab_municipio m LEFT JOIN mapa_idosos.tab_indicador_municipio i
-                    ON i.id_municipio=m.id_municipio WHERE m.id_municipio=:codigo""", {"codigo": codigo})
+        rows = query("""SELECT id_municipio,municipio,total_alfabetizacao,nao_alfabetizados,
+                    total_escolaridade,baixa_escolaridade,renda_media,id_uf
+                    FROM mapa_idosos.vw_mapa_idosos WHERE id_municipio=:codigo""", {"codigo": codigo})
         if not rows:
             raise NotFound("Município não encontrado.")
         city = municipio_json(rows[0][:-1], UF[int(rows[0][-1])][0])
@@ -120,20 +112,46 @@ def pesquisa_municipio(codigo):
 
 @app.get("/api/pnad-escolaridade")
 def pnad():
-    rows = query("""SELECT nivel_instrucao,total_amostra,amostra_com_renda,renda_media
-                FROM mapa_idosos.tab_pnad_resumo ORDER BY nivel_instrucao""")
-    return jsonify([{"nivel": int(level), "escolaridade": PNAD_LABELS[int(level)],
+    rows = query("""SELECT nivel_instrucao,escolaridade,total_amostra,amostra_com_renda,renda_media,
+                fonte,ano_fonte,fonte_url
+                FROM mapa_idosos.vw_pnad_escolaridade ORDER BY nivel_instrucao""")
+    return jsonify([{"nivel": int(level), "escolaridade": label,
                      "total_amostra": int(total), "amostra_com_renda": int(with_income),
-                     "renda_media": number(income)}
-                    for level, total, with_income, income in rows])
+                     "renda_media": number(income), "fonte": source,
+                     "ano_fonte": int(year) if year is not None else None, "fonte_url": url}
+                    for level, label, total, with_income, income, source, year, url in rows])
 
 
 @app.get("/api/catalogo-municipios")
 def catalogo_municipios():
-    rows = query("""SELECT m.id_municipio,m.nome,m.id_uf
-                FROM mapa_idosos.tab_municipio m ORDER BY m.nome,m.id_uf""")
+    rows = query("""SELECT id_municipio,nome,id_uf
+                FROM mapa_idosos.vw_catalogo_municipios ORDER BY nome,id_uf""")
     return jsonify([{"id_municipio": int(code), "nome": name, "uf": UF[int(uf)][0]}
                     for code, name, uf in rows])
+
+
+@app.get("/api/programas-municipio")
+def programas_municipio():
+    rows = query("""SELECT codigo,programa,orgao,id_municipio,municipio,uf,
+                ano_referencia,qtd_turmas,participantes_total,participantes_60mais,
+                fonte_url,publicado_em,consultado_em,justificativa,versao,
+                ano_alfabetizacao,taxa_analfabetismo,percentual_baixa_escolaridade,renda_media
+                FROM mapa_idosos.vw_programas_municipio ORDER BY ano_referencia DESC,uf,municipio,programa""")
+    return jsonify([{
+        "codigo": code, "programa": program, "orgao": agency,
+        "id_municipio": int(city_code), "municipio": city, "uf": uf,
+        "ano_referencia": int(year) if year is not None else None,
+        "qtd_turmas": int(classes) if classes is not None else None,
+        "participantes_total": int(participants) if participants is not None else None,
+        "participantes_60mais": int(seniors) if seniors is not None else None,
+        "fonte_url": source, "publicado_em": published.isoformat() if published else None,
+        "consultado_em": consulted.isoformat() if consulted else None,
+        "justificativa": rationale, "versao": version,
+        "ano_alfabetizacao": int(census_year) if census_year is not None else None,
+        "taxa_analfabetismo": number(rate),
+        "percentual_baixa_escolaridade": number(low_education), "renda_media": number(income),
+    } for (code, program, agency, city_code, city, uf, year, classes, participants, seniors,
+           source, published, consulted, rationale, version, census_year, rate, low_education, income) in rows])
 
 
 @app.errorhandler(oracledb.Error)

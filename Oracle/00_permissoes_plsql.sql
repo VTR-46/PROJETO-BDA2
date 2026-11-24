@@ -1,0 +1,3 @@
+-- Como SYS na PDB usada em .owner.env (não em CDB$ROOT).
+-- Se conectado à raiz, execute antes: ALTER SESSION SET CONTAINER = XEPDB1;
+GRANT CREATE PROCEDURE, CREATE TRIGGER, CREATE SEQUENCE TO MAPA_IDOSOS;

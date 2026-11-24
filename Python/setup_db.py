@@ -1,5 +1,6 @@
 """Cria uma vez os usuários e tabelas do projeto no Oracle XE local."""
 
+import os
 import secrets
 import string
 import subprocess
@@ -7,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-DSN = "localhost:1539/FREEPDB1"
+DSN = "localhost:1521/XEPDB1"
 
 
 def password():
@@ -17,7 +18,8 @@ def password():
 
 def sqlplus(script, connection):
     result = subprocess.run(["sqlplus", "-L", "-s", connection], input=script,
-                            text=True, cwd=ROOT, capture_output=True)
+                            text=True, encoding="utf-8", env=dict(os.environ, NLS_LANG=".AL32UTF8"),
+                            cwd=ROOT, capture_output=True)
     if result.returncode or "ORA-" in result.stdout or "SP2-" in result.stdout:
         raise RuntimeError(result.stdout[-1500:] or result.stderr[-1500:])
 
@@ -29,7 +31,7 @@ def main():
     sqlplus(f"""WHENEVER SQLERROR EXIT SQL.SQLCODE
 ALTER SESSION SET CONTAINER=XEPDB1;
 CREATE USER MAPA_IDOSOS IDENTIFIED BY \"{owner_password}\";
-GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW TO MAPA_IDOSOS;
+GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE, CREATE TRIGGER, CREATE SEQUENCE TO MAPA_IDOSOS;
 ALTER USER MAPA_IDOSOS QUOTA UNLIMITED ON USERS;
 CREATE USER MAPA_IDOSOS_RO IDENTIFIED BY \"{reader_password}\";
 GRANT CREATE SESSION TO MAPA_IDOSOS_RO;
@@ -42,15 +44,17 @@ EXIT
     sqlplus(f"""WHENEVER SQLERROR EXIT SQL.SQLCODE
 @banco_base.sql
 @schema_indicadores.sql
-GRANT SELECT ON tab_regiao TO MAPA_IDOSOS_RO;
-GRANT SELECT ON tab_uf TO MAPA_IDOSOS_RO;
-GRANT SELECT ON tab_municipio TO MAPA_IDOSOS_RO;
-GRANT SELECT ON tab_indicador_municipio TO MAPA_IDOSOS_RO;
-GRANT SELECT ON tab_indicador_uf TO MAPA_IDOSOS_RO;
-GRANT SELECT ON tab_pnad_resumo TO MAPA_IDOSOS_RO;
+@Oracle/13a_catalogos_pnad.sql
+@Oracle/13_estrutura_programas.sql
+@Oracle/14_funcoes.sql
+@Oracle/15_procedures.sql
+@Oracle/16_triggers.sql
+@Oracle/06_visoes.sql
+@Oracle/18_validacao_plsql.sql
+@Oracle/08_permissoes_leitura.sql
 EXIT
 """, f"MAPA_IDOSOS/{owner_password}@{DSN}")
-    print("Oracle preparado em XEPDB1. Credenciais locais gravadas em .env e .owner.env.")
+    print("Oracle preparado em XEPDB1; Python/load_data.py carrega indicadores e programas reais. Credenciais locais gravadas em .env e .owner.env.")
 
 
 if __name__ == "__main__":
