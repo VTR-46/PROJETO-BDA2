@@ -60,6 +60,14 @@ function selecionar(ui, city) { ui.context.city = city; ui.run('selectCity(city)
 function clicarPesquisa(ui) { ui.elements.get('details').children.at(-1).events.click(); }
 function todos(element) { return [element, ...element.children.flatMap(todos)]; }
 
+test('PNAD informa falha da API na propria secao do grafico', async () => {
+  const ui = interfaceSimulada();
+  ui.context.fetch = async () => ({ ok: false, status: 503 });
+  await ui.run('loadPnad()');
+  assert.match(ui.elements.get('pnad-note').textContent, /Não foi possível carregar a renda por escolaridade/);
+  assert.equal(ui.elements.get('pnad-chart').children.length, 0);
+});
+
 test('PNAD mostra rótulos do banco, fonte única e somente links seguros', async () => {
   for (const [url, year, links] of [[null, null, 0], ['javascript:alert(1)', null, 0], ['https://example.org/pnad', 2020, 1]]) {
     const ui = interfaceSimulada();

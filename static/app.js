@@ -353,36 +353,41 @@ function resetMap() {
 }
 
 async function loadPnad() {
-  const rows = await getJson('/api/pnad-escolaridade');
-  const target = document.getElementById('pnad-chart');
-  target.replaceChildren();
-  const max = Math.max(...rows.map(row => row.renda_media || 0));
-  for (const row of rows) {
-    const item = document.createElement('div'); item.className = 'bar-row';
-    const label = document.createElement('span'); label.textContent = row.escolaridade;
-    const track = document.createElement('div'); track.className = 'bar-track';
-    const bar = document.createElement('div'); bar.className = 'bar'; bar.style.width = max > 0 ? `${100 * (row.renda_media ?? 0) / max}%` : '0%';
-    track.append(bar);
-    const value = document.createElement('strong'); value.textContent = emptyValue(row.renda_media, v => money.format(v));
-    item.append(label, track, value); target.append(item);
-  }
-  const valid = rows.reduce((sum, row) => sum + row.amostra_com_renda, 0);
-  const total = rows.reduce((sum, row) => sum + row.total_amostra, 0);
-  const note = document.getElementById('pnad-note');
-  note.textContent = `${integer.format(valid)} de ${integer.format(total)} registros informaram renda. Médias sem pesos amostrais.`;
-  const sources = new Map(rows.map(row => [JSON.stringify([row.fonte, row.ano_fonte, row.fonte_url]), row]));
-  for (const row of sources.values()) {
-    const source = document.createElement('span');
-    source.textContent = ` Fonte: ${row.fonte || 'Não informada'}. ${row.ano_fonte == null ? 'Ano não informado' : `Ano: ${row.ano_fonte}`}.`;
-    try {
-      const url = new URL(row.fonte_url);
-      if (['https:', 'http:'].includes(url.protocol)) {
-        const link = document.createElement('a'); link.textContent = ' Consultar fonte';
-        link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
-        source.append(link);
-      }
-    } catch { /* A fonte pode ter somente o arquivo local documentado. */ }
-    note.append(source);
+  try {
+    const rows = await getJson('/api/pnad-escolaridade');
+    const target = document.getElementById('pnad-chart');
+    target.replaceChildren();
+    const max = Math.max(...rows.map(row => row.renda_media || 0));
+    for (const row of rows) {
+      const item = document.createElement('div'); item.className = 'bar-row';
+      const label = document.createElement('span'); label.textContent = row.escolaridade;
+      const track = document.createElement('div'); track.className = 'bar-track';
+      const bar = document.createElement('div'); bar.className = 'bar'; bar.style.width = max > 0 ? `${100 * (row.renda_media ?? 0) / max}%` : '0%';
+      track.append(bar);
+      const value = document.createElement('strong'); value.textContent = emptyValue(row.renda_media, v => money.format(v));
+      item.append(label, track, value); target.append(item);
+    }
+    const valid = rows.reduce((sum, row) => sum + row.amostra_com_renda, 0);
+    const total = rows.reduce((sum, row) => sum + row.total_amostra, 0);
+    const note = document.getElementById('pnad-note');
+    note.textContent = `${integer.format(valid)} de ${integer.format(total)} registros informaram renda. Médias sem pesos amostrais.`;
+    const sources = new Map(rows.map(row => [JSON.stringify([row.fonte, row.ano_fonte, row.fonte_url]), row]));
+    for (const row of sources.values()) {
+      const source = document.createElement('span');
+      source.textContent = ` Fonte: ${row.fonte || 'Não informada'}. ${row.ano_fonte == null ? 'Ano não informado' : `Ano: ${row.ano_fonte}`}.`;
+      try {
+        const url = new URL(row.fonte_url);
+        if (['https:', 'http:'].includes(url.protocol)) {
+          const link = document.createElement('a'); link.textContent = ' Consultar fonte';
+          link.href = url.href; link.target = '_blank'; link.rel = 'noopener noreferrer';
+          source.append(link);
+        }
+      } catch { /* A fonte pode ter somente o arquivo local documentado. */ }
+      note.append(source);
+    }
+  } catch (error) {
+    document.getElementById('pnad-chart').replaceChildren();
+    document.getElementById('pnad-note').textContent = `Não foi possível carregar a renda por escolaridade. ${error.message}`;
   }
 }
 
