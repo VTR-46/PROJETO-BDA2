@@ -1,3 +1,4 @@
+-- Pre-requisito: executar 20a_roles_admin.sql como SYS antes deste roteiro.
 -- Execute com F5, conectado como MAPA_IDOSOS em XEPDB1.
 -- Use este roteiro no banco já criado. Os MERGEs atualizam ou inserem por chave.
 -- Cria a estrutura complementar se ausente e não apaga registros.
@@ -19,4 +20,4 @@ WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 COMMIT;
 @@../18_validacao_plsql.sql
 @@../07_validacao.sql
-@@../08_permissoes_leitura.sql
+@@../20_roles_seguranca.sql

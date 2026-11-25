@@ -218,3 +218,7 @@ Todas as colunas de PK são obrigatórias. Além delas, os campos obrigatórios 
 Os nomes geográficos ficam em suas tabelas; indicadores usam chaves geográficas; os nomes dos níveis de instrução e a origem PNAD ficam nos catálogos. A tabela associativa evita criar colunas repetidas para cada programa de um município e sua chave composta distingue os anos.
 
 O resumo PNAD permite somente uma linha por nível de instrução: sua PK não inclui ano nem fonte. Ele representa a amostra atual do projeto, não uma série histórica. A auditoria guarda instantâneos JSON intencionalmente; ela não substitui as tabelas de indicadores nem mantém histórico completo das ofertas de programas.
+
+## View materializada e perfis
+
+A estrutura possui 11 tabelas de negocio e a MV `MV_RESUMO_UF`, com armazenamento interno adicional. A MV e um resultado agregado por regiao/UF, nao uma nova entidade com FKs. Sua atualizacao e manual. Roles e usuarios sao objetos de seguranca e nao alteram os relacionamentos do MER. Consulte [SEGURANCA.md](SEGURANCA.md).
