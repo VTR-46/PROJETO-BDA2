@@ -1,107 +1,69 @@
 # Mapa do analfabetismo de idosos no Brasil
 
-## Módulo PL/SQL e programas de alfabetização
+Aplicação web para explorar a **taxa de analfabetismo de pessoas com 60 anos ou mais** nos estados e municípios brasileiros, junto com indicadores de renda e escolaridade.
 
-O projeto inclui 3 procedures, 2 functions, 2 triggers e 3 tabelas adicionais de
-programas, ofertas municipais e auditoria. Veja a [instalação incremental, fontes
-oficiais e demonstração](Oracle/PLSQL.md). No banco existente, prepare as permissões
-com `Oracle/00_permissoes_plsql.sql` e execute `Oracle/roteiros/00_incremento_plsql.sql` como
-dono; esse roteiro não recarrega os indicadores do Censo.
+O painel oferece:
 
-Esta página local mostra a **taxa de analfabetismo de pessoas com 60 anos ou mais** em estados e municípios. Ao escolher um município, também aparecem renda média e baixa escolaridade. Dois gráficos comparam renda e analfabetismo municipal e mostram renda por escolaridade na amostra nacional da PNAD.
+- Mapa interativo com seleção de UF e busca nacional por município.
+- Indicadores municipais de analfabetismo, baixa escolaridade e renda média.
+- Gráficos de renda versus analfabetismo e renda por escolaridade na amostra PNAD.
+- Tabela de ofertas documentadas de programas de alfabetização, com filtros e fontes.
+- Pesquisa opcional com Gemini para explorar o contexto do município e fazer perguntas.
 
 ## Como funciona
 
 ```text
-CSV, INSERTs e códigos geográficos → cálculo em Python → Oracle XE
-                                      Oracle XE → API Flask → mapa Leaflet no navegador
+Dados do IBGE e arquivos do projeto → Oracle → API Flask → HTML, JavaScript e Leaflet
 ```
 
-O Oracle guarda indicadores resumidos. O Flask consulta o banco usando uma conta de leitura e entrega JSON à página. O Leaflet desenha os mapas com os GeoJSON já preparados. O SQL Developer executa a parte Oracle; o Flask continua necessário para abrir a página.
+O Oracle armazena os dados e suas regras. O Flask consulta as views com uma conta de leitura e envia os resultados ao navegador. Ao carregar uma UF, a página recebe os indicadores dos seus municípios; o clique no mapa mostra o registro correspondente.
 
-## Estrutura do projeto
+O banco possui **11 tabelas: 3 do esquema geográfico base e 8 adicionais**, além de **3 procedures, 2 functions, 2 triggers e 6 views**.
 
-A modelagem do banco está em [MER e modelo relacional](Oracle/MODELAGEM_MER.md), com as 11 tabelas, PKs, FKs e cardinalidades. O documento inclui um resumo em texto para visualizadores sem suporte a Mermaid.
+## Como executar — passo a passo
 
-| Caminho | Conteúdo |
-| --- | --- |
-| `Python/` | Servidor, carga, preparação de arquivos e testes. |
-| `Oracle/` | Scripts SQL para instalação, atualização e validação. Veja o [guia do SQL Developer](Oracle/README.md). |
-| `CSV/` | Fontes do Censo usadas nos cálculos. |
-| `INSERT/` | Códigos geográficos e registros da PNAD. |
-| `static/` | JavaScript, CSS, Leaflet e malhas GeoJSON. |
-| `templates/` | Página HTML. |
-| `banco_base.sql` | Esquema inicial. |
-| `schema_indicadores.sql` | Tabelas adicionais para a instalação via Python. |
-| `.env` e `.owner.env` | Conexões locais de leitura e carga. São ignoradas pelo Git. |
+### 1. Preparar o computador
 
-## Executar em outra máquina
+Instale **Python 3.10 ou superior**, com `pip` e `venv`. No Windows, habilite Python no `PATH`. Você também precisa de acesso a um **Oracle preparado**, local ou remoto, e de internet na primeira instalação das dependências.
 
-1. Instale **Python 3.10 ou superior**, com `pip` e `venv` (no Windows, habilite Python no `PATH`; no Linux, pode ser necessário instalar o pacote `python3-venv`).
-2. Clone o repositório ou copie a pasta do projeto, **sem `.venv`, `.env` e `.owner.env`**. O ambiente Python precisa ser criado em cada máquina; as senhas são configuradas separadamente.
-3. Tenha acesso a um Oracle já preparado, local ou remoto. Para um banco novo, siga o [roteiro do SQL Developer](Oracle/README.md): os scripts SQL já incluem os dados consolidados. Esse preparo é feito uma vez por banco, não por computador.
-4. Copie `.env.example` para `.env` e preencha a senha de leitura. Em `ORACLE_DSN`, use `HOST:PORTA/SERVICO`, por exemplo `192.168.1.10:1521/XEPDB1` para um banco remoto. O servidor Oracle precisa permitir a conexão dessa máquina.
-5. Na pasta principal, execute:
+Clone o repositório ou copie a pasta do projeto. Ao transferir para outra máquina, deixe que ela crie sua própria `.venv` e configure suas próprias credenciais.
 
-   ```sh
-   python iniciar.py
-   ```
+### 2. Preparar o Oracle
 
-   No Linux/macOS, use `python3 iniciar.py` se o comando disponível for `python3`.
+Se o banco já está instalado e atualizado, siga para o passo 3.
 
-Abra <http://127.0.0.1:5000>. O iniciador cria `.venv`, instala as dependências e inicia o Flask, sem precisar ativar o ambiente manualmente. Nas próximas execuções, reutiliza o ambiente e só reinstala dependências se `requirements.txt` mudar. A primeira instalação exige internet. Para encerrar, pressione `Ctrl+C`.
+Execute manualmente os **scripts SQL de `00` a `19` da pasta `Oracle/`**, com **F5 — Executar Script** no SQL Developer, seguindo a sequência abaixo. Alguns arquivos têm dependências: por isso, o `06_visoes.sql` vem depois das funções e das tabelas complementares, mesmo tendo número menor.
 
-**Para apenas executar o mapa**, não é preciso instalar Node.js, SQL Developer, SQL*Plus ou Oracle Client nessa máquina: o driver Python conecta diretamente ao Oracle. Node.js só é necessário para reconstruir as malhas; SQL Developer ou SQL*Plus são usados no preparo do banco. Os mapas e dados SQL já acompanham o repositório. A chave Gemini é opcional; o mapa funciona sem ela.
+Para uma instalação nova:
 
-Se optar pelo preparo local com `Python/setup_db.py`, execute-o **antes de criar `.env`**: ele gera as duas configurações e recusa sobrescrever arquivos existentes. Para cargas Python em um banco preparado por SQL Developer, use `.owner.env.example` como modelo de `.owner.env` e informe a senha do dono do esquema.
+| Ordem | Arquivo em `Oracle/` | O que fazer |
+|---|---|---|
+| 1 | `00_admin_usuarios.sql` | Como `SYS` com papel `SYSDBA`, criar os usuários e informar as senhas. |
+| 2 | `00_permissoes_plsql.sql` | Ainda como `SYS`, conceder permissões PL/SQL. A criação dos usuários já concede essas permissões; este arquivo também atende instalações antigas. |
+| 3 | `01_estrutura.sql` | Trocar para `MAPA_IDOSOS` e criar as tabelas em um esquema vazio. |
+| 4 | `02_regioes_ufs.sql` e `03_municipios.sql` | Executar nessa ordem para carregar regiões, UFs e municípios. |
+| 5 | `04_indicadores_municipais.sql` e `04a_indicadores_ufs.sql` | Carregar os indicadores municipais e estaduais. |
+| 6 | `13a_catalogos_pnad.sql` e `05_pnad_resumo.sql` | Criar os catálogos e depois carregar o resumo da PNAD. |
+| 7 | `13_estrutura_programas.sql` | Criar programas, ofertas e auditoria; acrescentar o controle de versão. |
+| 8 | `14_funcoes.sql`, `15_procedures.sql` e `16_triggers.sql` | Executar nessa ordem para criar os objetos PL/SQL. |
+| 9 | `06_visoes.sql` | Criar as views após suas dependências. |
+| 10 | `17_programas_reais.sql` | Carregar os programas e as ofertas documentadas; depois executar `COMMIT;`. |
+| 11 | `18_validacao_plsql.sql` e `07_validacao.sql` | Conferir a compilação e os dados carregados. |
+| 12 | `08_permissoes_leitura.sql` | Liberar a leitura para o usuário da página. |
+| 13 | `09_consulta_analfabetismo.sql` até `12_consulta_codigos_municipios.sql` | Executar as consultas de exemplo. Elas não alteram dados. |
+| 14 | `19_demonstracao_plsql.sql` | Demonstrar as regras e a auditoria; o script desfaz suas alterações temporárias. |
 
-O iniciador mantém o servidor acessível somente no próprio computador. Ele não instala nem copia o Oracle e não altera os dados do banco. Se `.venv` estiver danificado ou tiver sido copiado de outra máquina, remova apenas essa pasta e execute novamente. Para testar o iniciador sem instalar pacotes nem acessar o banco:
+Após a etapa 2, os demais arquivos são executados como **`MAPA_IDOSOS`**, com atribuição padrão. Confira a saída de cada etapa antes de continuar.
 
-```sh
-python -m unittest discover -s Python -p test_iniciar.py -v
-```
+No banco existente, não recrie usuários nem execute `01_estrutura.sql`. O arquivo `01a_indicador_uf_migracao.sql` cria a tabela estadual se ela ainda estiver ausente. Para atualizar os dados ou os objetos, execute os arquivos correspondentes respeitando as dependências acima; recarregar indicadores pode substituir correções manuais.
 
-## Abrir a página neste computador
+Os exemplos usam `localhost:1521/XEPDB1`. Ajuste host, porta e serviço à sua instalação. Para a explicação de cada arquivo, consulte o [guia Oracle](Oracle/README.md).
 
-O Oracle XE local já está preparado em `XEPDB1`, e os dados e malhas já foram carregados. Abra o PowerShell **na pasta principal do projeto**:
+**O banco é preparado uma vez por instalação.** Para executar a página em outra máquina, basta que ela consiga acessar esse Oracle.
 
-```powershell
-python iniciar.py
-```
+### 3. Configurar a conexão
 
-Abra <http://127.0.0.1:5000>. Para encerrar o servidor, pressione `Ctrl+C` no terminal. A conexão de leitura está em `.env`.
-
-No mapa, a cor de cada UF mostra sua taxa estadual. Clique numa UF ou escolha-a na lista para carregar os municípios. A busca funciona desde o mapa do Brasil: digite um nome, escolha uma sugestão com a UF ou pressione Enter sobre um nome completo. A página abre a UF e o município encontrados. **Ver Brasil** retorna ao mapa estadual e mantém a busca disponível. Cinza significa **sem taxa calculável**, não taxa zero. O balão da UF informa sua taxa e a cobertura municipal.
-
-## Pesquisar um município com Gemini
-
-Acrescente à configuração `.env` na raiz (ou às variáveis de ambiente do servidor):
-
-```dotenv
-GEMINI_API_KEY=SUA_CHAVE_DO_GOOGLE_AI_STUDIO
-GEMINI_MODEL=gemini-3.5-flash-lite
-GEMINI_GOOGLE_SEARCH=0
-```
-
-Obtenha sua chave no [Google AI Studio](https://aistudio.google.com/apikey) e reinicie o Flask. `GEMINI_MODEL` e `GEMINI_GOOGLE_SEARCH` são opcionais. Por padrão (`GEMINI_GOOGLE_SEARCH=0`), o servidor coleta gratuitamente o contexto territorial e histórico em APIs públicas (IBGE Localidades, IBGE Cidades@, SIDRA Censo 2022 e Wikipédia em português) e envia ao Gemini sem exigir a ferramenta paga `google_search`, funcionando imediatamente no plano gratuito. Se o seu projeto tiver faturamento ativo para *Grounding with Google Search*, defina `GEMINI_GOOGLE_SEARCH=1` (se a cota de busca retornar `429`, o servidor faz fallback automático para o modo público). A chave fica no servidor: não a coloque no JavaScript, em capturas de tela nem no Git. Nenhuma dependência adicional é necessária.
-
-Selecione um município pelo mapa, pela busca ou pelo gráfico e clique em **Pesquisar município com Gemini**. O relatório aparece abaixo do mapa, com contexto histórico e atual, relações possíveis com analfabetismo, renda e escolaridade dos idosos, fontes e limitações. Depois, use **Enviar pergunta** para aprofundar a análise. Os links acompanham os trechos que sustentam; respostas sem citações recebem um aviso explícito.
-
-O servidor consulta os números diretamente no Oracle antes de cada envio. A IA recebe apenas identificação municipal, indicadores agregados e conversa; nunca recebe credenciais nem acesso para executar SQL. Os números utilizados e a data da pesquisa aparecem em cada resposta. Fatos recentes não explicam automaticamente o Censo 2022, o ano da renda e escolaridade permanece desconhecido, e hipóteses não comprovam causas.
-
-Relatórios e perguntas ficam separados por código IBGE, somente na memória da aba. Voltar a um município reaproveita sua conversa; recarregar ou fechar a aba apaga os resultados. Cada pergunta envia o relatório inicial e até cinco trocas anteriores, com até 1.000 caracteres por pergunta. A chamada usa `store=false`, sem histórico de interações persistido pela aplicação ou encadeamento no servidor do Gemini; o processamento do Google segue seus próprios termos.
-
-Cada clique de pesquisa ou envio de pergunta faz uma chamada, com busca habilitada e timeout de 60 segundos, sem repetição automática. Consultas podem consumir cota e gerar cobrança: veja a [documentação de busca e preços](https://aistudio.google.com/docs/google-search#pricing). Se faltar chave, rede, acesso ao modelo ou cota, o painel informa o problema e permite nova tentativa; o mapa continua funcionando.
-
-**Erro 429 ao pesquisar:** confira as [cotas do projeto no Google AI Studio](https://aistudio.google.com/rate-limit). O limite pode ser temporário, diário ou corresponder a um recurso indisponível no seu plano. A busca na web pela API do `gemini-3.5-flash-lite` não está disponível no plano gratuito, conforme a [tabela de preços do modelo](https://aistudio.google.com/docs/pricing#gemini-3.5-flash-lite), embora uma chamada de texto sem busca possa funcionar. Nesse caso, aguardar ou gerar outra chave do mesmo projeto não libera a busca: é necessário habilitar o acesso e o faturamento adequados no projeto, sujeito a cobrança. A aplicação preserva o `Retry-After` informado em segundos pelo Google e explica a espera na mensagem, sem repetir a chamada automaticamente.
-
-## Preparar outro Oracle XE
-
-Há duas formas de instalar o banco. **Escolha uma**; não execute ambas no mesmo esquema.
-
-### Pelo Oracle SQL Developer
-
-Siga o [roteiro da pasta Oracle](Oracle/README.md). Resumidamente: execute `Oracle/00_admin_usuarios.sql` como `SYS` no serviço `XEPDB1`; depois execute `Oracle/roteiros/00_instalacao_completa.sql` como `MAPA_IDOSOS`, usando **F5**. Configure `.env` na raiz:
+Copie `.env.example` para um arquivo chamado `.env`, na raiz do projeto, e preencha:
 
 ```dotenv
 ORACLE_USER=MAPA_IDOSOS_RO
@@ -109,83 +71,82 @@ ORACLE_PASSWORD=SUA_SENHA_DE_LEITURA
 ORACLE_DSN=localhost:1521/XEPDB1
 ```
 
-Instale as dependências e execute `python Python/app.py`. Para atualizar um banco existente, use `Oracle/roteiros/00_atualizar_dados.sql` como `MAPA_IDOSOS`.
+Para um Oracle remoto, troque `localhost` pelo endereço do servidor. Use a senha de leitura criada no passo anterior. Não publique `.env` nem `.owner.env`, pois contêm credenciais.
 
-### Pelos scripts Python
+### 4. Iniciar a aplicação
 
-Requer Oracle XE local, `sqlplus` disponível e autenticação local `/ as sysdba`. Para recriar a malha, também requer Node.js com `npx` e internet.
+Abra o terminal na pasta que contém `iniciar.py` e execute:
 
 ```powershell
-python -m pip install -r requirements.txt
-python Python/setup_db.py
-python Python/fetch_alfabetizacao.py
-python Python/load_data.py
-python Python/build_geo.py
-python -m unittest discover -s Python -p test_project.py
-python Python/app.py
+python iniciar.py
 ```
 
-Execute `setup_db.py` **uma vez, em uma instalação nova**. Ele cria `MAPA_IDOSOS` (dono dos dados) e `MAPA_IDOSOS_RO` (somente leitura), executa `banco_base.sql` e `schema_indicadores.sql` e grava `.owner.env` e `.env` na raiz. As cargas podem ser repetidas. Se os CSVs e malhas já existem, não é necessário baixá-los novamente. Para verificar as fontes sem gravar no Oracle:
+No Linux/macOS, use `python3 iniciar.py` se esse for o comando disponível.
 
-```powershell
-python Python/load_data.py --check
+O iniciador cria a pasta `.venv`, instala as dependências e inicia o Flask. Nas próximas execuções, reutiliza o ambiente. Ele não instala o Oracle nem carrega o banco.
+
+### 5. Abrir e utilizar a página
+
+Acesse **<http://127.0.0.1:5000>** no mesmo computador em que iniciou o servidor.
+
+Escolha uma UF ou busque um município para consultar os indicadores. Use **Ver Brasil** para retornar ao mapa nacional. As seções podem ser recolhidas clicando no título. Para encerrar o servidor, pressione **Ctrl+C** no terminal.
+
+Os mapas e os dados SQL já acompanham o projeto. Para apenas executar a página, não é necessário instalar Node.js ou SQL Developer no computador que acessa o Oracle.
+
+## Pesquisa com Gemini — opcional
+
+Para habilitar a pesquisa, acrescente ao `.env` e reinicie o servidor:
+
+```dotenv
+GEMINI_API_KEY=SUA_CHAVE
+GEMINI_GOOGLE_SEARCH=0
 ```
 
-## Scripts Python
+Obtenha a chave no [Google AI Studio](https://aistudio.google.com/apikey). Selecione um município e clique em **Pesquisar município com Gemini**. Depois, use o campo de perguntas para continuar a conversa.
 
-| Script | O que faz |
-| --- | --- |
-| `Python/app.py` | Inicia Flask e a página na porta 5000. |
-| `Python/setup_db.py` | Cria usuários, tabelas e permissões no Oracle local. |
-| `Python/fetch_alfabetizacao.py` | Consulta a tabela 9542 do IBGE e gera o CSV municipal completo. |
-| `Python/load_data.py` | Valida fontes, calcula indicadores e os carrega por `MERGE`. |
-| `Python/build_geo.py` | Baixa e simplifica a malha de 2025; cria GeoJSON por UF. |
-| `Python/test_project.py` | Verifica dados, geografia e API. |
+O servidor consulta os indicadores no Oracle antes de enviá-los ao Gemini. A chave fica no servidor. As conversas ficam na memória da aba e são perdidas ao recarregar. Cada envio depende da cota e do acesso do seu projeto Google; em caso de erro, a página informa o problema. O mapa funciona sem essa chave.
 
-## De onde vêm os indicadores
+## Dados e limites da análise
 
-- **Taxa municipal:** [Tabela 9542 do Censo 2022 do IBGE](https://servicodados.ibge.gov.br/api/v3/agregados/9542/metadados), no `CSV/censo_alfabetizacao_tratado_municipios_2022.csv`. Soma **Total** e **Não alfabetizadas** nas idades 60, 61, 62, 63, 64 e 65 anos ou mais, com sexo e raça `Total`. Taxa = `100 × não alfabetizados ÷ total`.
-- **Taxa estadual:** a mesma conta, usando as 12 células de cada UF em `CSV/censo_alfabetizacao_tratado.csv`. É calculada diretamente pelos totais estaduais, pois há municípios sem dados. Não é a média das taxas municipais.
-- **Baixa escolaridade:** proporção de idosos **sem instrução ou com fundamental incompleto** nas faixas 60 a 64 e 65 anos ou mais de `CSV/censo_idosos_consolidado.csv`.
-- **Renda municipal:** média das rendas dessas duas faixas, ponderada pelo número de idosos de cada faixa. Os `INSERTs` antigos do censo de idosos não entram nesses cálculos: seus primeiros valores estão em escala diferente do CSV.
-- **PNAD:** resumo de `INSERT/tab_pnad_idosos_INSERT.sql`. A renda média considera registros com renda informada. É uma descrição da **amostra nacional**, sem pesos amostrais.
-- **Geografia:** os códigos vêm do arquivo em `INSERT/` e as formas vêm da [Malha Municipal Digital 2025 do IBGE](https://www.ibge.gov.br/geociencias/organizacao-do-territorio/malhas-territoriais/15774-malhas.html).
+- **Alfabetização:** Censo 2022, tabela 9542 do IBGE, para pessoas com 60 anos ou mais. A taxa estadual usa os totais oficiais da UF.
+- **Renda e escolaridade municipais:** arquivo `CSV/censo_idosos_consolidado.csv`; o ano não está documentado. Baixa escolaridade significa “sem instrução e fundamental incompleto”.
+- **PNAD:** resumo nacional de 76.492 registros, sem pesos amostrais nos arquivos utilizados. Sua renda não representa cada município.
+- **Geografia:** malha IBGE de 2025, com 5.571 municípios; 5.334 têm taxa calculável e 5.330 têm taxa e renda disponíveis.
+- **Programas:** o catálogo inicial reúne dois programas e três ofertas documentadas; não é um levantamento completo do Brasil.
 
-## Banco e API
+Cinza no mapa ou `NULL` significa **dado ausente**, não zero. Renda é um indicador indireto de qualidade de vida, e as comparações não comprovam relações causais.
 
-O projeto tem 11 tabelas: as 3 geográficas base e 8 adicionais. Os catálogos `TAB_NIVEL_INSTRUCAO` e `TAB_FONTE_DADO` fornecem os nomes e a fonte do gráfico **Renda por escolaridade** por meio da view PNAD. No banco existente, execute `Oracle/roteiros/00_incremento_plsql.sql` como dono antes de reiniciar o Flask com esta versão. O ano e a URL da amostra permanecem não informados quando não documentados.
+## Estrutura e documentação
 
-`tab_regiao`, `tab_uf` e `tab_municipio` formam a hierarquia geográfica. `tab_indicador_uf` e `tab_indicador_municipio` guardam os indicadores; `tab_pnad_resumo` guarda o resumo nacional. As views `vw_taxa_uf`, `vw_mapa_idosos` e `vw_pnad_escolaridade` facilitam consultas no SQL Developer.
+| Local | Conteúdo |
+|---|---|
+| `Python/` | Servidor Flask, carga de dados e testes. |
+| `Oracle/` | Estrutura do banco, cargas, consultas e objetos PL/SQL. |
+| `CSV/` e `INSERT/` | Arquivos de origem dos dados. |
+| `templates/` e `static/` | HTML, JavaScript, CSS, Leaflet e mapas GeoJSON. |
+| `iniciar.py` | Prepara o ambiente Python e inicia a aplicação. |
 
-| Endereço | Resposta |
-| --- | --- |
-| `/api/ufs` | 27 UFs, contagens, taxa estadual e cobertura municipal. |
-| `/api/catalogo-municipios` | Código IBGE, nome e UF dos municípios para a busca nacional. |
-| `/api/municipios?uf=SP` | Indicadores dos municípios da UF. |
-| `/api/pnad-escolaridade` | Renda média e tamanho da amostra por escolaridade, com `fonte`, `ano_fonte` e `fonte_url` (os dois últimos podem ser nulos). |
-| `POST /api/municipios/<codigo>/pesquisa` | Relatório ou resposta do Gemini com indicadores do Oracle e fontes. |
+- [Guia do banco Oracle](Oracle/README.md): instalação, atualização e consultas.
+- [MER e modelo relacional](Oracle/MODELAGEM_MER.md): tabelas, chaves e cardinalidades.
+- [Diagrama editável](Oracle/diagramas/MODELAGEM_MER.drawio): versão para diagrams.net.
+- [Dicionário de dados](Oracle/DICIONARIO_DADOS.md): finalidade das tabelas e dos objetos.
+- [Cálculos exibidos no HTML](CALCULOS_HTML.md): fórmulas, exemplos, consultas e origem de cada indicador.
+- [Guia PL/SQL](Oracle/PLSQL.md): regras de negócio, demonstrações e testes no Oracle.
 
-A pesquisa aceita `{}` para gerar o relatório ou `{"pergunta":"...","historico":[{"role":"assistant","content":"relatório inicial"}]}` para perguntar. O histórico começa com o relatório (`assistant`), seguido de até cinco pares `user`/`assistant`. Responde com `municipio`, `indicadores`, `resposta`, `fontes` (`titulo`, `url`, `trecho`), `sugestoes_busca` (HTML do Google, isolado em iframe com sandbox) e `gerado_em` (UTC). Erros usam `{"erro":"..."}`: 400 entrada inválida, 404 município inexistente, 413 corpo acima de 512 KiB, 429 cota, 502 falha do provedor/rede, 503 configuração/Oracle e 504 timeout.
+## Problemas comuns e verificações
 
-O Flask usa a conta `MAPA_IDOSOS_RO`. Não compartilhe `.env` nem `.owner.env`, que contêm senhas.
+| Problema | O que conferir |
+|---|---|
+| “Banco de dados indisponível” | Oracle ligado e conexão correta no `.env`. |
+| “Renda por escolaridade” não carrega após atualização | Como `MAPA_IDOSOS`, execute `Oracle/13a_catalogos_pnad.sql` e depois `Oracle/06_visoes.sql` (com as funções já criadas); reinicie o Flask. |
+| Mapa não aparece | Arquivos em `static/malhas/` e conexão com a API. |
+| Gemini não responde | Chave, acesso ao modelo, conexão e cota no Google AI Studio. |
 
-## Verificação e limites
-
-Os testes da pesquisa funcionam sem Oracle ativo, sem chave Gemini e sem consumir cota:
+Para conferir o banco, execute `Oracle/07_validacao.sql` no SQL Developer. Os testes da pesquisa abaixo funcionam sem Oracle ativo nem chamadas pagas ao Gemini; Node.js é necessário para o teste JavaScript:
 
 ```powershell
-python -m unittest discover -s Python -p test_pesquisa.py -v
+.venv\Scripts\python.exe -m unittest discover -s Python -p test_pesquisa.py -v
 node --test tests/test_app.cjs
 ```
 
-Para a suíte completa, o Oracle e os arquivos locais de dados precisam estar disponíveis. Se faltarem os SQLs geográficos ou da PNAD em `INSERT/`, extraia os respectivos arquivos de `INSERT/Inserts.zip` nessa pasta.
-
-```powershell
-python -m unittest discover -s Python -p 'test_*.py'
-```
-
-São esperados **27 UFs com taxa**, **5.571 municípios na malha**, **5.334 com taxa**, **5.330 com taxa e renda** e **76.492 registros da PNAD**. Dos 5.570 municípios do Censo 2022, 236 têm pelo menos um valor necessário ausente e aparecem em cinza. Boa Esperança do Norte (MT) aparece na malha de 2025, mas não no Censo 2022.
-
-Renda é apenas um indicador indireto de qualidade de vida. O ano dos indicadores de renda e escolaridade não está documentado nos arquivos disponíveis. A PNAD não permite estimar renda municipal nem concluir uma relação causal neste projeto.
-
-Se a página mostrar **“Banco de dados indisponível”**, confira se o Oracle XE está ligado e se `.env` aponta para a conta de leitura e o serviço corretos. Se faltar a malha, confira `static/malhas/`. Para validar as tabelas, execute `Oracle/07_validacao.sql` no SQL Developer.
+No Linux/macOS, use `.venv/bin/python` no lugar do executável Windows.
