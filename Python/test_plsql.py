@@ -61,7 +61,7 @@ class PlsqlTest(unittest.TestCase):
         return out.getvalue()
 
     def test_objects_and_seed(self):
-        self.assertEqual(self.scalar('SELECT COUNT(*) FROM user_tables'),11)
+        self.assertEqual(self.scalar("SELECT COUNT(*) FROM user_tables WHERE table_name LIKE 'TAB_%'"),11)
         self.assertEqual(self.scalar("SELECT COUNT(*) FROM user_objects WHERE object_type IN ('FUNCTION','PROCEDURE','TRIGGER') AND status='VALID'"),7)
         self.assertEqual(self.scalar('SELECT COUNT(*) FROM user_errors'),0)
         self.assertEqual(self.scalar('SELECT COUNT(*) FROM tab_programa'),2)

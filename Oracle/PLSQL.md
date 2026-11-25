@@ -1,3 +1,5 @@
+> Perfis de acesso: prepare `20a_roles_admin.sql` como SYS em XEPDB1 antes dos roteiros automaticos; eles terminam executando `20_roles_seguranca.sql`. Na instalacao manual, execute o 20 depois dos objetos e dados. Consulte [SEGURANCA.md](SEGURANCA.md).
+
 # PL/SQL e programas de alfabetização
 
 O módulo acrescenta três tabelas às seis existentes. Programas e municípios têm
