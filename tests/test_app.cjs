@@ -23,7 +23,8 @@ function interfaceSimulada() {
   const elements = new Map();
   const document = {
     getElementById(id) { if (!elements.has(id)) elements.set(id, new Element()); return elements.get(id); },
-    createElement(tag) { return new Element(tag); }
+    createElement(tag) { return new Element(tag); },
+    createElementNS(ns, tag) { return new Element(tag); }
   };
   const context = vm.createContext({ document, URL, L: {
     map: () => ({ events: {}, on(event, fn) { this.events[event] = fn; }, fitBounds() {}, removeLayer() {} }),
@@ -59,6 +60,48 @@ const flush = () => new Promise(resolve => setImmediate(resolve));
 function selecionar(ui, city) { ui.context.city = city; ui.run('selectCity(city)'); }
 function clicarPesquisa(ui) { ui.elements.get('details').children.at(-1).events.click(); }
 function todos(element) { return [element, ...element.children.flatMap(todos)]; }
+
+test('seleção no gráfico destaca um ponto e sincroniza nome com mapa e teclado', () => {
+  const ui = interfaceSimulada();
+  const first = { ...cityA, renda_media: 2000, taxa_analfabetismo: 10 };
+  const second = { ...cityB, renda_media: 1000, taxa_analfabetismo: 20 };
+  const missing = { id_municipio: 1234567, nome: 'Sem indicador', uf: 'SP', renda_media: null, taxa_analfabetismo: 5 };
+  ui.context.rows = [first, second, missing];
+  ui.run('cities = rows; drawScatter()');
+  const a = ui.run(`scatterPoints.get(${first.id_municipio}).circle`);
+  const b = ui.run(`scatterPoints.get(${second.id_municipio}).circle`);
+  a.events.click();
+  assert.equal(a.attributes['aria-pressed'], 'true');
+  assert.equal(a.attributes.class, 'point selected');
+  assert.equal(b.attributes['aria-pressed'], 'false');
+  assert.ok(ui.elements.get('scatter-selection').textContent.includes(first.nome));
+  assert.equal(ui.run('scatterSelection.children[1].textContent'), 'São Paulo (SP)');
+  assert.equal(ui.run('selectedCity.id_municipio'), first.id_municipio);
+  let prevented = false;
+  b.events.keydown({ key: 'Enter', preventDefault() { prevented = true; } });
+  assert.equal(prevented, true);
+  assert.equal(a.attributes['aria-pressed'], 'false');
+  assert.equal(b.attributes['aria-pressed'], 'true');
+  selecionar(ui, first);
+  assert.equal(a.attributes['aria-pressed'], 'true');
+  assert.equal(b.attributes['aria-pressed'], 'false');
+  selecionar(ui, missing);
+  assert.equal(a.attributes['aria-pressed'], 'false');
+  assert.match(ui.elements.get('scatter-selection').textContent, /não tem ponto/);
+  assert.equal(ui.run('scatterSelection.childElementCount'), 0);
+  ui.run('resetMap()');
+  assert.equal(ui.run('scatterPoints.size'), 0);
+  assert.equal(ui.elements.get('scatter-selection').textContent, '');
+});
+
+test('gráfico mantém coordenadas válidas quando a renda de todos os pontos é zero', () => {
+  const ui = interfaceSimulada();
+  ui.context.rows = [{ ...cityA, renda_media: 0, taxa_analfabetismo: 0 }];
+  ui.run('cities = rows; drawScatter()');
+  const circle = ui.run(`scatterPoints.get(${cityA.id_municipio}).circle`);
+  assert.equal(Number.isFinite(Number(circle.attributes.cx)), true);
+  assert.equal(Number.isFinite(Number(circle.attributes.cy)), true);
+});
 
 test('PNAD informa falha da API na propria secao do grafico', async () => {
   const ui = interfaceSimulada();

@@ -16,6 +16,8 @@ let selectedSearchCode = null;
 let selectedCity = null;
 let selectedLayer = null;
 let hoveredLayer = null;
+const scatterPoints = new Map();
+let scatterSelection = null;
 const HOVER_BORDER = { color: '#73d5ff', weight: 2.5 };
 const SELECTED_BORDER = { color: '#001cb8', weight: 3 };
 let programRows = [], programSort = { key: 'ano_referencia', direction: 'desc' };
@@ -156,6 +158,7 @@ function selectCity(city) {
     if (!researchStates.get(city.id_municipio).entries.length) runResearch(city);
   });
   details.append(eyebrow, title, grid, researchButton);
+  updateScatterSelection();
   renderResearch();
   const layer = cityLayers.get(city.id_municipio);
   highlightCity(layer);
@@ -257,15 +260,41 @@ function makeSvg(name, attributes, text) {
   return node;
 }
 
+function updateScatterSelection() {
+  for (const [code, point] of scatterPoints) {
+    const active = code === selectedCity?.id_municipio;
+    point.circle.setAttribute('class', active ? 'point selected' : 'point');
+    point.circle.setAttribute('aria-pressed', String(active));
+  }
+  scatterSelection?.replaceChildren();
+  const caption = document.getElementById('scatter-selection');
+  if (!selectedCity) {
+    caption.textContent = scatterPoints.size ? 'Clique em uma bolinha para selecionar um município.' : '';
+    return;
+  }
+  const point = scatterPoints.get(selectedCity.id_municipio);
+  caption.textContent = point ? `Selecionado: ${cityLabel(selectedCity)} · ${money.format(selectedCity.renda_media)} · analfabetismo ${percent.format(selectedCity.taxa_analfabetismo)}%.`
+    : `${cityLabel(selectedCity)} não tem ponto neste gráfico: faltam dados de renda ou analfabetismo.`;
+  if (!point || !scatterSelection) return;
+  const label = cityLabel(selectedCity);
+  const labelWidth = Math.min(510, label.length * 7);
+  const labelX = Math.max(55, Math.min(point.x + 12, 575 - labelWidth));
+  scatterSelection.append(
+    makeSvg('circle', { cx: point.x, cy: point.y, r: 7, class: 'scatter-selected-marker' }),
+    makeSvg('text', { x: labelX, y: point.y > 40 ? point.y - 12 : point.y + 23, class: 'scatter-selected-label' }, label)
+  );
+}
+
 function drawScatter() {
   const target = document.getElementById('scatter');
   target.replaceChildren();
+  scatterPoints.clear(); scatterSelection = null;
   const points = cities.filter(city => city.taxa_analfabetismo != null && city.renda_media != null);
   document.getElementById('scatter-count').textContent = `${integer.format(points.length)} municípios com ambos os indicadores nesta UF.`;
-  if (!points.length) { target.textContent = 'Sem municípios com os dois indicadores disponíveis.'; return; }
-  const svg = makeSvg('svg', { viewBox: '0 0 600 320', 'aria-hidden': 'true' });
+  if (!points.length) { target.textContent = 'Sem municípios com os dois indicadores disponíveis.'; updateScatterSelection(); return; }
+  const svg = makeSvg('svg', { viewBox: '0 0 600 320', role: 'group', 'aria-label': 'Municípios da UF: selecione um ponto' });
   const left = 55, top = 16, width = 520, height = 250;
-  const maxIncome = Math.max(...points.map(p => p.renda_media)) * 1.05;
+  const maxIncome = Math.max(1, ...points.map(p => p.renda_media)) * 1.05;
   const maxRate = Math.max(10, Math.ceil(Math.max(...points.map(p => p.taxa_analfabetismo)) / 10) * 10);
   for (let i = 0; i <= 4; i++) {
     const y = top + height - i * height / 4;
@@ -275,24 +304,31 @@ function drawScatter() {
   svg.append(makeSvg('text', { x: left, y: 305, class: 'axis-label' }, 'Renda média mensal (R$) →'));
   svg.append(makeSvg('text', { x: left + width, y: 305, 'text-anchor': 'end', class: 'tick' }, money.format(maxIncome)));
   for (const city of points) {
+    const x = left + city.renda_media / maxIncome * width;
+    const y = top + height - city.taxa_analfabetismo / maxRate * height;
     const circle = makeSvg('circle', {
-      cx: left + city.renda_media / maxIncome * width,
-      cy: top + height - city.taxa_analfabetismo / maxRate * height,
+      cx: x,
+      cy: y,
       r: 4, class: 'point', tabindex: '0', role: 'button',
       'aria-label': `${city.nome}: ${percent.format(city.taxa_analfabetismo)}%, ${money.format(city.renda_media)}`
     });
     circle.append(makeSvg('title', {}, `${city.nome}: ${percent.format(city.taxa_analfabetismo)}% · ${money.format(city.renda_media)}`));
     circle.addEventListener('click', () => selectCity(city));
     circle.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCity(city); } });
+    scatterPoints.set(city.id_municipio, { circle, x, y });
     svg.append(circle);
   }
+  scatterSelection = makeSvg('g', { 'aria-hidden': 'true', 'pointer-events': 'none' });
+  svg.append(scatterSelection);
   target.append(svg);
+  updateScatterSelection();
 }
 
 async function loadUf(sigla, selectedCode = null) {
   if (!sigla) return resetMap();
   clearHover();
   selectedCity = null; renderResearch();
+  updateScatterSelection();
   details.replaceChildren();
   const current = ++requestId;
   status.textContent = `Carregando municípios de ${sigla}…`;
@@ -349,6 +385,8 @@ function resetMap() {
   status.textContent = 'Selecione uma UF ou busque um município de qualquer estado.';
   document.getElementById('scatter').textContent = 'Selecione uma UF para ver a comparação.';
   document.getElementById('scatter-count').textContent = '';
+  scatterPoints.clear(); scatterSelection = null;
+  updateScatterSelection();
   details.innerHTML = '<p class="eyebrow">MUNICÍPIO SELECIONADO</p><h3>Escolha um município no mapa</h3><p>Os indicadores disponíveis aparecerão aqui.</p>';
 }
 

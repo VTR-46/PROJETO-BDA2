@@ -98,6 +98,10 @@ button:disabled { opacity:.6; cursor:wait; }
 .chart { margin-top:22px; min-height:320px; }.chart svg { width:100%; height:auto; display:block; }
 .gridline { stroke:#dce5e1; stroke-width:1; }.tick { fill:#697b7c; font:12px 'DM Sans',sans-serif; }.axis-label { fill:#354f53; font:700 12px 'DM Sans',sans-serif; }
 .point { fill:#3b7771; opacity:.65; cursor:pointer; }.point:hover,.point:focus { fill:#bf6b4f; opacity:1; r:6; outline:none; }
+.point.selected,.point.selected:hover,.point.selected:focus { fill:#001cb8; opacity:1; r:7; }
+.scatter-selected-marker { fill:#001cb8; stroke:white; stroke-width:2; }
+.scatter-selected-label { fill:#001cb8; stroke:white; stroke-width:4; paint-order:stroke; stroke-linejoin:round; font:700 12px 'DM Sans',sans-serif; }
+.scatter-selection { color:#001cb8 !important; font-weight:700; }
 .bar-chart { display:grid; gap:17px; margin-top:30px; }.bar-row { display:grid; grid-template-columns:155px 1fr 88px; gap:12px; align-items:center; font-size:12px; }.bar-row span { line-height:1.25; }.bar-row strong { text-align:right; font-size:12px; color:#204349; }
 .bar-track { height:15px; border-radius:2px; background:#eaf0ed; overflow:hidden; }.bar { height:100%; background:#518b7b; border-radius:2px; }
 footer { margin:24px 0 0; padding:23px 0; border-top:1px solid #dce4df; display:flex; gap:30px; color:#617174; font-size:13px; line-height:1.55; }
