@@ -1,5 +1,5 @@
+-- Pre-requisito: executar 20a_roles_admin.sql como SYS antes deste roteiro.
 -- F5 como dono, na mesma PDB das tabelas existentes. Não recarrega o Censo.
--- Conexão desta variante: localhost:1539/FREEPDB1.
 SET DEFINE OFF
 SET SERVEROUTPUT ON
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
@@ -12,4 +12,4 @@ WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 @@../17_programas_reais.sql
 COMMIT;
 @@../18_validacao_plsql.sql
-@@../08_permissoes_leitura.sql
+@@../20_roles_seguranca.sql

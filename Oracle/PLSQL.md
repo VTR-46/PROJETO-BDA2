@@ -1,3 +1,5 @@
+> Perfis de acesso: prepare `20a_roles_admin.sql` como SYS em FREEPDB1 antes dos roteiros automaticos; eles terminam executando `20_roles_seguranca.sql`. Na instalacao manual, execute o 20 depois dos objetos e dados. Consulte [SEGURANCA.md](SEGURANCA.md).
+
 # PL/SQL e programas de alfabetização
 
 O módulo acrescenta três tabelas às seis existentes. Programas e municípios têm
@@ -8,7 +10,7 @@ exclusivo de idosos. A operação é pelo SQL Developer; a aplicação permanece
 ## Instalar no banco existente
 
 1. Consulte a conexão em `.owner.env`, sem divulgar a senha. Neste ambiente, a PDB
-   é `FREEPDB1`, com conexão `localhost:1539/FREEPDB1`. Conectado como SYS nessa PDB, execute `00_permissoes_plsql.sql` com F5.
+   é `FREEPDB1`. Conectado como SYS nessa PDB, execute `00_permissoes_plsql.sql` com F5.
    Ele acrescenta CREATE PROCEDURE, CREATE TRIGGER e CREATE SEQUENCE (necessário
    às colunas identity). Não cria usuários nem altera senhas.
 2. Como `MAPA_IDOSOS`, execute `roteiros/00_incremento_plsql.sql` com F5. Ele cria a estrutura

@@ -1,3 +1,5 @@
+> Perfis de acesso: prepare `20a_roles_admin.sql` como SYS em FREEPDB1 antes dos roteiros automaticos; eles terminam executando `20_roles_seguranca.sql`. Na instalacao manual, execute o 20 depois dos objetos e dados. Consulte [SEGURANCA.md](SEGURANCA.md).
+
 # Banco Oracle — guia para começar
 
 Este banco guarda os dados do projeto **Mapa do analfabetismo de idosos no Brasil**: regiões, estados, municípios, indicadores de educação e renda e ofertas documentadas de programas de alfabetização.
@@ -34,7 +36,7 @@ Antes de executar, confirme ou desfaça trabalhos pendentes na conexão. Comando
 
 ## 3. Primeira instalação no SQL Developer
 
-Você precisa de um Oracle em execução e do SQL Developer para acessá-lo. Esta variante usa Oracle local na porta **1539**, com serviço e PDB **`FREEPDB1`**.
+Você precisa de um Oracle em execução e do SQL Developer para acessá-lo. Os exemplos abaixo usam Oracle local com serviço `FREEPDB1`.
 
 ### Passo 1 — Criar os usuários
 
@@ -56,6 +58,8 @@ Nessa conexão, abra [00_admin_usuarios.sql](00_admin_usuarios.sql) e pressione 
 
 - `MAPA_IDOSOS`: dono das tabelas; instala e atualiza os dados.
 - `MAPA_IDOSOS_RO`: usuário de leitura usado pela página.
+
+Ainda como SYS/SYSDBA, execute `20a_roles_admin.sql` para preparar as roles e os usuários adicionais antes do roteiro de instalação. O roteiro do dono termina com o script 20, que configura a MV e as permissões.
 
 Se esses usuários já existem, siga a seção de banco existente abaixo.
 
@@ -87,8 +91,6 @@ python iniciar.py
 
 Abra <http://127.0.0.1:5000>. As senhas são locais e não devem ser incluídas na entrega ou no repositório.
 
-Os arquivos `.env` e `.owner.env` são ignorados pelo Git e não mudam ao trocar de branch. Configure-os nesse computador usando os exemplos desta variante. Se optar pelo preparo via `Python/setup_db.py`, execute-o antes de criar esses arquivos: ele precisa do SQL*Plus local e da autenticação `/ as sysdba`, cria os usuários e gera as configurações, recusando sobrescrever arquivos existentes.
-
 ## 4. Se o banco já está instalado
 
 1. Conecte-se como `MAPA_IDOSOS`.
@@ -96,7 +98,7 @@ Os arquivos `.env` e `.owner.env` são ignorados pelo Git e não mudam ao trocar
 3. Execute com **F5** e confira a saída.
 4. Reinicie o servidor Python se ele já estava aberto.
 
-Em uma instalação antiga sem permissão para criar objetos PL/SQL, execute primeiro [00_permissoes_plsql.sql](00_permissoes_plsql.sql) como `SYS`, na PDB `FREEPDB1`. Depois volte à conexão `MAPA_IDOSOS` para executar o roteiro.
+Em uma instalação antiga sem permissão para criar objetos PL/SQL, execute primeiro [00_permissoes_plsql.sql](00_permissoes_plsql.sql) como `SYS`, na PDB do projeto — o banco identificado pelo serviço `FREEPDB1` neste exemplo. Depois volte à conexão `MAPA_IDOSOS` para executar o roteiro.
 
 ## 5. Quais tabelas existem?
 

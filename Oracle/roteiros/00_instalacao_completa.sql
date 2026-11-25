@@ -1,4 +1,5 @@
--- Execute com F5, conectado como MAPA_IDOSOS em localhost:1539/FREEPDB1.
+-- Pre-requisito: executar 20a_roles_admin.sql como SYS antes deste roteiro.
+-- Execute com F5, conectado como MAPA_IDOSOS em FREEPDB1.
 -- Use este roteiro para uma instalação nova, após 00_admin_usuarios.sql.
 -- Os @@ apontam para os scripts SQL mantidos na pasta Oracle.
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
@@ -19,4 +20,4 @@ WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 COMMIT;
 @@../18_validacao_plsql.sql
 @@../07_validacao.sql
-@@../08_permissoes_leitura.sql
+@@../20_roles_seguranca.sql

@@ -45,3 +45,7 @@ As procedures definem savepoints e não executam `COMMIT`: a confirmação ou re
 | `TRG_OFERTA_VALIDACAO` | Confere se município pertence à UF do programa estadual, protege a identidade município/programa/ano e controla a versão da oferta. |
 
 Os triggers executam na mesma transação do DML: se a operação for revertida, a auditoria também é revertida.
+
+## View materializada e perfis
+
+A estrutura possui 11 tabelas de negocio e a MV `MV_RESUMO_UF`, com armazenamento interno adicional. A MV e um resultado agregado por regiao/UF, nao uma nova entidade com FKs. Sua atualizacao e manual. Roles e usuarios sao objetos de seguranca e nao alteram os relacionamentos do MER. Consulte [SEGURANCA.md](SEGURANCA.md).

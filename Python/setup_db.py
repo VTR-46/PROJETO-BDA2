@@ -1,4 +1,4 @@
-"""Cria uma vez os usuários e tabelas no Oracle local com serviço FREEPDB1."""
+"""Cria uma vez os usuários e tabelas do projeto no Oracle local."""
 
 import os
 import secrets
@@ -51,10 +51,9 @@ EXIT
 @Oracle/16_triggers.sql
 @Oracle/06_visoes.sql
 @Oracle/18_validacao_plsql.sql
-@Oracle/08_permissoes_leitura.sql
 EXIT
 """, f"MAPA_IDOSOS/{owner_password}@{DSN}")
-    print(f"Oracle preparado em {DSN}; Python/load_data.py carrega indicadores e programas reais. Credenciais locais gravadas em .env e .owner.env.")
+    print("Estrutura preparada em FREEPDB1. Execute load_data.py; conclua com 20a_roles_admin.sql como SYS e 20_roles_seguranca.sql como dono antes de abrir a aplicacao. Credenciais locais em .env e .owner.env.")
 
 
 if __name__ == "__main__":

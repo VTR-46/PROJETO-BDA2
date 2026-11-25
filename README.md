@@ -1,6 +1,6 @@
 # Mapa do analfabetismo de idosos no Brasil
 
-Esta versão usa **Oracle local na porta 1539, com Nome do Serviço `FREEPDB1`**. Mantenha os usuários `MAPA_IDOSOS` (dono) e `MAPA_IDOSOS_RO` (leitura).
+Esta variante usa **localhost, porta 1539 e Nome do Serviço `FREEPDB1`**, com os perfis de segurança e a view materializada.
 
 Aplicação web para explorar a **taxa de analfabetismo de pessoas com 60 anos ou mais** nos estados e municípios brasileiros, junto com indicadores de renda e escolaridade.
 
@@ -34,7 +34,7 @@ Clone o repositório ou copie a pasta do projeto. Ao transferir para outra máqu
 
 Se o banco já está instalado e atualizado, siga para o passo 3.
 
-Execute manualmente os **scripts SQL de `00` a `19` da pasta `Oracle/`**, com **F5 — Executar Script** no SQL Developer, seguindo a sequência abaixo. Alguns arquivos têm dependências: por isso, o `06_visoes.sql` vem depois das funções e das tabelas complementares, mesmo tendo número menor.
+Execute manualmente os **scripts SQL de `00` a `21` da pasta `Oracle/`**, com **F5 — Executar Script** no SQL Developer, seguindo a sequência abaixo. Alguns arquivos têm dependências: por isso, o `06_visoes.sql` vem depois das funções e das tabelas complementares, mesmo tendo número menor.
 
 Para uma instalação nova:
 
@@ -51,7 +51,7 @@ Para uma instalação nova:
 | 9 | `06_visoes.sql` | Criar as views após suas dependências. |
 | 10 | `17_programas_reais.sql` | Carregar os programas e as ofertas documentadas; depois executar `COMMIT;`. |
 | 11 | `18_validacao_plsql.sql` e `07_validacao.sql` | Conferir a compilação e os dados carregados. |
-| 12 | `08_permissoes_leitura.sql` | Liberar a leitura para o usuário da página. |
+| 12 | `20a_roles_admin.sql` e `20_roles_seguranca.sql` | Executar o 20a como SYS/SYSDBA em FREEPDB1; depois o 20 como MAPA_IDOSOS. Criar os perfis e a MV. O arquivo 08 é apenas uma chamada de compatibilidade ao 20. |
 | 13 | `09_consulta_analfabetismo.sql` até `12_consulta_codigos_municipios.sql` | Executar as consultas de exemplo. Elas não alteram dados. |
 | 14 | `19_demonstracao_plsql.sql` | Demonstrar as regras e a auditoria; o script desfaz suas alterações temporárias. |
 
@@ -59,7 +59,7 @@ Após a etapa 2, os demais arquivos são executados como **`MAPA_IDOSOS`**, com 
 
 No banco existente, não recrie usuários nem execute `01_estrutura.sql`. O arquivo `01a_indicador_uf_migracao.sql` cria a tabela estadual se ela ainda estiver ausente. Para atualizar os dados ou os objetos, execute os arquivos correspondentes respeitando as dependências acima; recarregar indicadores pode substituir correções manuais.
 
-No SQL Developer, use host `localhost`, porta **1539** e **Nome do Serviço `FREEPDB1`**, em vez de SID. Se o banco estiver em outro computador, ajuste o host. Para a explicação de cada arquivo, consulte o [guia Oracle](Oracle/README.md).
+Os exemplos usam `localhost:1539/FREEPDB1`. Ajuste host, porta e serviço à sua instalação. Para a explicação de cada arquivo, consulte o [guia Oracle](Oracle/README.md).
 
 **O banco é preparado uma vez por instalação.** Para executar a página em outra máquina, basta que ela consiga acessar esse Oracle.
 
@@ -74,8 +74,6 @@ ORACLE_DSN=localhost:1539/FREEPDB1
 ```
 
 Para um Oracle remoto, troque `localhost` pelo endereço do servidor. Use a senha de leitura criada no passo anterior. Não publique `.env` nem `.owner.env`, pois contêm credenciais.
-
-**Ao trocar de branch:** `.env` e `.owner.env` são locais e ignorados pelo Git; não mudam automaticamente. No outro computador, configure o DSN acima no `.env` e também no `.owner.env` se usar a carga Python. O preparo pelo SQL Developer segue os passos acima. A alternativa `Python/setup_db.py` exige SQL*Plus local e autenticação `/ as sysdba`; ela deve ser executada antes de criar esses arquivos, pois recusa sobrescrevê-los.
 
 ### 4. Iniciar a aplicação
 
@@ -154,3 +152,11 @@ node --test tests/test_app.cjs
 ```
 
 No Linux/macOS, use `.venv/bin/python` no lugar do executável Windows.
+
+## Perfis e resumo materializado
+
+Veja [seguranca e MV](Oracle/SEGURANCA.md). Depois da instalacao, execute `Oracle/21_teste_seguranca.sql` com F5 em cada uma das quatro conexoes documentadas. A aplicacao continua usando MAPA_IDOSOS_RO. O dono atualiza a MV manualmente depois de confirmar cargas ou alteracoes.
+
+## Configuração desta branch
+
+No outro computador, copie `.env.example` para `.env` e informe a senha de leitura. Para cargas Python, use `.owner.env.example` como modelo de `.owner.env`. Ambos usam `ORACLE_DSN=localhost:1539/FREEPDB1`. Os arquivos locais de credenciais são ignorados pelo Git e não mudam ao trocar de branch. Se optar por `setup_db.py`, execute-o antes de criar esses arquivos; ele os gera e recusa sobrescrevê-los. Esse preparo alternativo exige SQL*Plus local e autenticação `/ as sysdba`.

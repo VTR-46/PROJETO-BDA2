@@ -17,7 +17,8 @@ SELECT
     i.total_escolaridade,
     i.baixa_escolaridade,
     fn_percentual(i.baixa_escolaridade,i.total_escolaridade) AS percentual_baixa_escolaridade,
-    i.renda_media
+    i.renda_media,
+    i.versao
 FROM tab_municipio m
 JOIN tab_uf u ON u.id_uf = m.id_uf
 JOIN tab_regiao r ON r.id_regiao = u.id_regiao
