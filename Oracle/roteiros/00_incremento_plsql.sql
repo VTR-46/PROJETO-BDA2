@@ -1,4 +1,5 @@
 -- F5 como dono, na mesma PDB das tabelas existentes. Não recarrega o Censo.
+-- Conexão desta variante: localhost:1539/FREEPDB1.
 SET DEFINE OFF
 SET SERVEROUTPUT ON
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK

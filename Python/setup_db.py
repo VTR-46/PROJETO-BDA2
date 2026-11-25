@@ -1,4 +1,4 @@
-"""Cria uma vez os usuários e tabelas do projeto no Oracle XE local."""
+"""Cria uma vez os usuários e tabelas no Oracle local com serviço FREEPDB1."""
 
 import os
 import secrets
@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-DSN = "localhost:1521/XEPDB1"
+DSN = "localhost:1539/FREEPDB1"
 
 
 def password():
@@ -29,7 +29,7 @@ def main():
         raise SystemExit("Configuração já existe; não recrie usuários sobre os dados atuais.")
     owner_password, reader_password = password(), password()
     sqlplus(f"""WHENEVER SQLERROR EXIT SQL.SQLCODE
-ALTER SESSION SET CONTAINER=XEPDB1;
+ALTER SESSION SET CONTAINER=FREEPDB1;
 CREATE USER MAPA_IDOSOS IDENTIFIED BY \"{owner_password}\";
 GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE, CREATE TRIGGER, CREATE SEQUENCE TO MAPA_IDOSOS;
 ALTER USER MAPA_IDOSOS QUOTA UNLIMITED ON USERS;
@@ -54,7 +54,7 @@ EXIT
 @Oracle/08_permissoes_leitura.sql
 EXIT
 """, f"MAPA_IDOSOS/{owner_password}@{DSN}")
-    print("Oracle preparado em XEPDB1; Python/load_data.py carrega indicadores e programas reais. Credenciais locais gravadas em .env e .owner.env.")
+    print(f"Oracle preparado em {DSN}; Python/load_data.py carrega indicadores e programas reais. Credenciais locais gravadas em .env e .owner.env.")
 
 
 if __name__ == "__main__":

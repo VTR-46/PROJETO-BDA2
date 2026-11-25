@@ -1,3 +1,4 @@
 -- Como SYS na PDB usada em .owner.env (não em CDB$ROOT).
--- Se conectado à raiz, execute antes: ALTER SESSION SET CONTAINER = XEPDB1;
+-- Conexão desta variante: localhost:1539/FREEPDB1, como SYS/SYSDBA.
+-- Se conectado à raiz, execute antes: ALTER SESSION SET CONTAINER = FREEPDB1;
 GRANT CREATE PROCEDURE, CREATE TRIGGER, CREATE SEQUENCE TO MAPA_IDOSOS;

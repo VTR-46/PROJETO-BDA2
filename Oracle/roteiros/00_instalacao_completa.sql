@@ -1,4 +1,4 @@
--- Execute com F5, conectado como MAPA_IDOSOS em XEPDB1.
+-- Execute com F5, conectado como MAPA_IDOSOS em localhost:1539/FREEPDB1.
 -- Use este roteiro para uma instalação nova, após 00_admin_usuarios.sql.
 -- Os @@ apontam para os scripts SQL mantidos na pasta Oracle.
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK

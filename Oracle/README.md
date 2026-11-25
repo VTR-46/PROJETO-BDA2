@@ -34,7 +34,7 @@ Antes de executar, confirme ou desfaça trabalhos pendentes na conexão. Comando
 
 ## 3. Primeira instalação no SQL Developer
 
-Você precisa de um Oracle em execução e do SQL Developer para acessá-lo. Os exemplos abaixo usam Oracle XE local com serviço `XEPDB1`.
+Você precisa de um Oracle em execução e do SQL Developer para acessá-lo. Esta variante usa Oracle local na porta **1539**, com serviço e PDB **`FREEPDB1`**.
 
 ### Passo 1 — Criar os usuários
 
@@ -45,9 +45,9 @@ Crie uma conexão administrativa com estas configurações:
 | Usuário | `SYS` |
 | Atribuição/papel | `SYSDBA` |
 | Host | `localhost` |
-| Porta | `1521` |
+| Porta | `1539` |
 | Tipo de identificação | **Nome do Serviço**, não SID |
-| Serviço | `XEPDB1` |
+| Serviço | `FREEPDB1` |
 | Senha | A senha administrativa escolhida na instalação do Oracle |
 
 Se o banco usar outro computador, porta ou serviço, ajuste esses campos e o destino do script administrativo.
@@ -76,7 +76,7 @@ Na raiz do projeto, configure o arquivo `.env`:
 ```dotenv
 ORACLE_USER=MAPA_IDOSOS_RO
 ORACLE_PASSWORD=SUA_SENHA_DE_LEITURA
-ORACLE_DSN=localhost:1521/XEPDB1
+ORACLE_DSN=localhost:1539/FREEPDB1
 ```
 
 Depois, na pasta principal do projeto, execute:
@@ -87,6 +87,8 @@ python iniciar.py
 
 Abra <http://127.0.0.1:5000>. As senhas são locais e não devem ser incluídas na entrega ou no repositório.
 
+Os arquivos `.env` e `.owner.env` são ignorados pelo Git e não mudam ao trocar de branch. Configure-os nesse computador usando os exemplos desta variante. Se optar pelo preparo via `Python/setup_db.py`, execute-o antes de criar esses arquivos: ele precisa do SQL*Plus local e da autenticação `/ as sysdba`, cria os usuários e gera as configurações, recusando sobrescrever arquivos existentes.
+
 ## 4. Se o banco já está instalado
 
 1. Conecte-se como `MAPA_IDOSOS`.
@@ -94,7 +96,7 @@ Abra <http://127.0.0.1:5000>. As senhas são locais e não devem ser incluídas 
 3. Execute com **F5** e confira a saída.
 4. Reinicie o servidor Python se ele já estava aberto.
 
-Em uma instalação antiga sem permissão para criar objetos PL/SQL, execute primeiro [00_permissoes_plsql.sql](00_permissoes_plsql.sql) como `SYS`, na PDB do projeto — o banco identificado pelo serviço `XEPDB1` neste exemplo. Depois volte à conexão `MAPA_IDOSOS` para executar o roteiro.
+Em uma instalação antiga sem permissão para criar objetos PL/SQL, execute primeiro [00_permissoes_plsql.sql](00_permissoes_plsql.sql) como `SYS`, na PDB `FREEPDB1`. Depois volte à conexão `MAPA_IDOSOS` para executar o roteiro.
 
 ## 5. Quais tabelas existem?
 

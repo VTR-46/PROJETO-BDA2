@@ -1,14 +1,14 @@
 -- OPCIONAL: execute apenas em uma instalação nova.
--- Conecte-se como SYS com papel SYSDBA ao serviço XEPDB1.
+-- Conecte-se como SYS/SYSDBA: localhost, porta 1539, serviço FREEPDB1.
 -- O SQL Developer solicitará as duas senhas. Use senhas fortes sem aspas ou &.
--- Neste computador os usuários já existem; não execute este arquivo novamente.
+-- Se os usuários já existem, pule a criação e use os scripts de atualização.
 
 -- O erro ORA-65096 ocorre quando este arquivo é executado no CDB$ROOT.
--- Troque XEPDB1 somente se o serviço/PDB da sua instalação tiver outro nome.
-ALTER SESSION SET CONTAINER = XEPDB1;
+-- Esta variante usa a PDB FREEPDB1. Interrompa em caso de erro de conexão/PDB.
+WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
+ALTER SESSION SET CONTAINER = FREEPDB1;
 SET VERIFY OFF
 SET ECHO OFF
-WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
 
 ACCEPT SENHA_DONO CHAR PROMPT 'Senha do dono: ' HIDE
 CREATE USER MAPA_IDOSOS IDENTIFIED BY "&SENHA_DONO";

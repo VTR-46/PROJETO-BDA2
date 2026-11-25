@@ -1,5 +1,7 @@
 # Mapa do analfabetismo de idosos no Brasil
 
+Esta versão usa **Oracle local na porta 1539, com Nome do Serviço `FREEPDB1`**. Mantenha os usuários `MAPA_IDOSOS` (dono) e `MAPA_IDOSOS_RO` (leitura).
+
 Aplicação web para explorar a **taxa de analfabetismo de pessoas com 60 anos ou mais** nos estados e municípios brasileiros, junto com indicadores de renda e escolaridade.
 
 O painel oferece:
@@ -57,7 +59,7 @@ Após a etapa 2, os demais arquivos são executados como **`MAPA_IDOSOS`**, com 
 
 No banco existente, não recrie usuários nem execute `01_estrutura.sql`. O arquivo `01a_indicador_uf_migracao.sql` cria a tabela estadual se ela ainda estiver ausente. Para atualizar os dados ou os objetos, execute os arquivos correspondentes respeitando as dependências acima; recarregar indicadores pode substituir correções manuais.
 
-Os exemplos usam `localhost:1521/XEPDB1`. Ajuste host, porta e serviço à sua instalação. Para a explicação de cada arquivo, consulte o [guia Oracle](Oracle/README.md).
+No SQL Developer, use host `localhost`, porta **1539** e **Nome do Serviço `FREEPDB1`**, em vez de SID. Se o banco estiver em outro computador, ajuste o host. Para a explicação de cada arquivo, consulte o [guia Oracle](Oracle/README.md).
 
 **O banco é preparado uma vez por instalação.** Para executar a página em outra máquina, basta que ela consiga acessar esse Oracle.
 
@@ -68,10 +70,12 @@ Copie `.env.example` para um arquivo chamado `.env`, na raiz do projeto, e preen
 ```dotenv
 ORACLE_USER=MAPA_IDOSOS_RO
 ORACLE_PASSWORD=SUA_SENHA_DE_LEITURA
-ORACLE_DSN=localhost:1521/XEPDB1
+ORACLE_DSN=localhost:1539/FREEPDB1
 ```
 
 Para um Oracle remoto, troque `localhost` pelo endereço do servidor. Use a senha de leitura criada no passo anterior. Não publique `.env` nem `.owner.env`, pois contêm credenciais.
+
+**Ao trocar de branch:** `.env` e `.owner.env` são locais e ignorados pelo Git; não mudam automaticamente. No outro computador, configure o DSN acima no `.env` e também no `.owner.env` se usar a carga Python. O preparo pelo SQL Developer segue os passos acima. A alternativa `Python/setup_db.py` exige SQL*Plus local e autenticação `/ as sysdba`; ela deve ser executada antes de criar esses arquivos, pois recusa sobrescrevê-los.
 
 ### 4. Iniciar a aplicação
 
