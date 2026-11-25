@@ -1,11 +1,11 @@
 -- OPCIONAL: execute apenas em uma instalação nova.
--- Conecte-se como SYS com papel SYSDBA ao serviço XEPDB1.
+-- Conecte-se como SYS com papel SYSDBA ao serviço FREEPDB1.
 -- O SQL Developer solicitará as duas senhas. Use senhas fortes sem aspas ou &.
 -- Neste computador os usuários já existem; não execute este arquivo novamente.
 
 -- O erro ORA-65096 ocorre quando este arquivo é executado no CDB$ROOT.
--- Troque XEPDB1 somente se o serviço/PDB da sua instalação tiver outro nome.
-ALTER SESSION SET CONTAINER = XEPDB1;
+-- Troque FREEPDB1 somente se o serviço/PDB da sua instalação tiver outro nome.
+ALTER SESSION SET CONTAINER = FREEPDB1;
 SET VERIFY OFF
 SET ECHO OFF
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK

@@ -4,7 +4,7 @@
 -- objetos: isso é feito pelo dono em 20_roles_seguranca.sql (passo 2).
 -- Repetível: ignora ORA-01921 (role existe) e ORA-01920 (usuário existe).
 WHENEVER SQLERROR EXIT SQL.SQLCODE ROLLBACK
-ALTER SESSION SET CONTAINER = XEPDB1;
+ALTER SESSION SET CONTAINER = FREEPDB1;
 SET VERIFY OFF
 SET ECHO OFF
 

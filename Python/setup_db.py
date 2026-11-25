@@ -8,7 +8,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parent.parent
-DSN = "localhost:1521/XEPDB1"
+DSN = "localhost:1521/FREEPDB1"
 
 
 def password():
@@ -29,7 +29,7 @@ def main():
         raise SystemExit("Configuração já existe; não recrie usuários sobre os dados atuais.")
     owner_password, reader_password = password(), password()
     sqlplus(f"""WHENEVER SQLERROR EXIT SQL.SQLCODE
-ALTER SESSION SET CONTAINER=XEPDB1;
+ALTER SESSION SET CONTAINER=FREEPDB1;
 CREATE USER MAPA_IDOSOS IDENTIFIED BY \"{owner_password}\";
 GRANT CREATE SESSION, CREATE TABLE, CREATE VIEW, CREATE PROCEDURE, CREATE TRIGGER, CREATE SEQUENCE TO MAPA_IDOSOS;
 ALTER USER MAPA_IDOSOS QUOTA UNLIMITED ON USERS;
@@ -53,7 +53,7 @@ EXIT
 @Oracle/18_validacao_plsql.sql
 EXIT
 """, f"MAPA_IDOSOS/{owner_password}@{DSN}")
-    print("Estrutura preparada em XEPDB1. Execute load_data.py; conclua com 20a_roles_admin.sql como SYS e 20_roles_seguranca.sql como dono antes de abrir a aplicacao. Credenciais locais em .env e .owner.env.")
+    print("Estrutura preparada em FREEPDB1. Execute load_data.py; conclua com 20a_roles_admin.sql como SYS e 20_roles_seguranca.sql como dono antes de abrir a aplicacao. Credenciais locais em .env e .owner.env.")
 
 
 if __name__ == "__main__":
