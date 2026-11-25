@@ -32,7 +32,7 @@ Clone o repositório ou copie a pasta do projeto. Ao transferir para outra máqu
 
 Se o banco já está instalado e atualizado, siga para o passo 3.
 
-Execute manualmente os **scripts SQL de `00` a `19` da pasta `Oracle/`**, com **F5 — Executar Script** no SQL Developer, seguindo a sequência abaixo. Alguns arquivos têm dependências: por isso, o `06_visoes.sql` vem depois das funções e das tabelas complementares, mesmo tendo número menor.
+Execute manualmente os **scripts SQL de `00` a `21` da pasta `Oracle/`**, com **F5 — Executar Script** no SQL Developer, seguindo a sequência abaixo. Alguns arquivos têm dependências: por isso, o `06_visoes.sql` vem depois das funções e das tabelas complementares, mesmo tendo número menor.
 
 Para uma instalação nova:
 
@@ -150,3 +150,7 @@ node --test tests/test_app.cjs
 ```
 
 No Linux/macOS, use `.venv/bin/python` no lugar do executável Windows.
+
+## Perfis e resumo materializado
+
+Veja [seguranca e MV](Oracle/SEGURANCA.md). Depois da instalacao, execute `Oracle/21_teste_seguranca.sql` com F5 em cada uma das quatro conexoes documentadas. A aplicacao continua usando MAPA_IDOSOS_RO. O dono atualiza a MV manualmente depois de confirmar cargas ou alteracoes.

@@ -276,3 +276,7 @@ Os valores mostrados no registro da pesquisa são o retrato dessa consulta, acom
 | [templates/index.html](templates/index.html) | Define onde cada resultado aparece na página. |
 
 Para executar o projeto, veja o [README principal](README.md). Para consultar diretamente pelo SQL Developer, veja o [guia Oracle](Oracle/README.md).
+
+## Resumo materializado para SQL Developer
+
+`MV_RESUMO_UF` nao e consultada pelo HTML. Agrupa os municipios por regiao/UF: `municipios_com_taxa` conta pares de alfabetizacao calculaveis; `municipios_com_renda` conta rendas nao nulas; a taxa municipal consolidada e `100 * SUM(nao_alfabetizados) / SUM(total_alfabetizacao)`; a renda municipal e `ROUND(AVG(renda_media),2)`, sem pesos populacionais. Nao confundir com a taxa estadual oficial ou renda estadual ponderada. Consulte [atualizacao manual e perfis](Oracle/SEGURANCA.md).

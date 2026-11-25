@@ -1,3 +1,5 @@
+> Perfis de acesso: prepare `20a_roles_admin.sql` como SYS em XEPDB1 antes dos roteiros automaticos; eles terminam executando `20_roles_seguranca.sql`. Na instalacao manual, execute o 20 depois dos objetos e dados. Consulte [SEGURANCA.md](SEGURANCA.md).
+
 # Banco Oracle — guia para começar
 
 Este banco guarda os dados do projeto **Mapa do analfabetismo de idosos no Brasil**: regiões, estados, municípios, indicadores de educação e renda e ofertas documentadas de programas de alfabetização.
@@ -56,6 +58,8 @@ Nessa conexão, abra [00_admin_usuarios.sql](00_admin_usuarios.sql) e pressione 
 
 - `MAPA_IDOSOS`: dono das tabelas; instala e atualiza os dados.
 - `MAPA_IDOSOS_RO`: usuário de leitura usado pela página.
+
+Ainda como SYS/SYSDBA, execute `20a_roles_admin.sql` para preparar as roles e os usuários adicionais antes do roteiro de instalação. O roteiro do dono termina com o script 20, que configura a MV e as permissões.
 
 Se esses usuários já existem, siga a seção de banco existente abaixo.
 

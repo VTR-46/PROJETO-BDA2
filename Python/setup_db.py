@@ -51,10 +51,9 @@ EXIT
 @Oracle/16_triggers.sql
 @Oracle/06_visoes.sql
 @Oracle/18_validacao_plsql.sql
-@Oracle/08_permissoes_leitura.sql
 EXIT
 """, f"MAPA_IDOSOS/{owner_password}@{DSN}")
-    print("Oracle preparado em XEPDB1; Python/load_data.py carrega indicadores e programas reais. Credenciais locais gravadas em .env e .owner.env.")
+    print("Estrutura preparada em XEPDB1. Execute load_data.py; conclua com 20a_roles_admin.sql como SYS e 20_roles_seguranca.sql como dono antes de abrir a aplicacao. Credenciais locais em .env e .owner.env.")
 
 
 if __name__ == "__main__":
